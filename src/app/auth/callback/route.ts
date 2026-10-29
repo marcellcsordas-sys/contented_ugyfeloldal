@@ -10,6 +10,12 @@ export async function GET(request: NextRequest) {
   const type = url.searchParams.get('type') as EmailOtpType | null;
   const supabase = await createClient();
 
+  // Se code, se token_hash: a token a # részben jött (alap meghívó link).
+  // A böngésző az átirányításnál megtartja a # részt, a /auth/hash oldal kezeli.
+  if (!code && !tokenHash) {
+    return NextResponse.redirect(new URL('/auth/hash', url.origin));
+  }
+
   let ok = false;
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);

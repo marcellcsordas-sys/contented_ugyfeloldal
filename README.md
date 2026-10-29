@@ -17,13 +17,10 @@ Stack: Next.js 15 (Vercel), Supabase (adatbázis, belépés, fájltárolás).
 1. **URL Configuration**
    - Site URL: `https://portal.contented.hu`
    - Redirect URLs: `https://portal.contented.hu/**` és a Vercel teszt-cím, pl. `https://contented-portal.vercel.app/**`
-2. **Email Templates** (hogy a link másik eszközön is működjön):
-   - *Magic Link*: a link legyen
-     `{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=email`
-   - *Invite user*: a link legyen
-     `{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=invite`
-   - A szövegeket nyugodtan írd át magyarra, Contented hangon.
-3. Ajánlott: **SMTP** beállítása (Project Settings → Auth → SMTP), saját küldő címmel (pl. portal@contented.hu). A beépített küldő óránként csak néhány e-mailt enged.
+2. Az alap e-mail sablonokkal is működik a belépés és a meghívó. Az ingyenes Supabase-ben a sablon csak saját SMTP-vel szerkeszthető.
+3. Ajánlott: **SMTP** beállítása (Project Settings → Auth → SMTP), saját küldő címmel (pl. portal@contented.hu). A beépített küldő óránként csak néhány e-mailt enged. SMTP után a sablonokat érdemes magyarra írni, és a linket így megadni, hogy másik eszközön is működjön:
+   - *Magic Link*: `{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=email`
+   - *Invite user*: `{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=invite`
 
 ### 3. Admin fiók (te)
 
