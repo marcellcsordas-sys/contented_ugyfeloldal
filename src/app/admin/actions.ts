@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
+import { headers } from 'next/headers';
 import { requireAdmin } from '@/lib/session';
 import { createAdminClient } from '@/lib/supabase/admin';
 import type { PostStatus } from '@/lib/types';
@@ -99,7 +100,11 @@ export async function inviteUser(clientId: string, fd: FormData): Promise<Result
   const fullName = str(fd, 'full_name');
   if (!email) return { ok: false, error: 'Az e-mail cím kötelező.' };
   const admin = createAdminClient();
-  const site = process.env.NEXT_PUBLIC_SITE_URL ?? '';
+  // A meghívó arra a címre mutat, amin az admin épp dolgozik
+  const h = await headers();
+  const host = h.get('x-forwarded-host') ?? h.get('host') ?? '';
+  const proto = h.get('x-forwarded-proto') ?? 'https';
+  const site = host ? `${proto}://${host}` : (process.env.NEXT_PUBLIC_SITE_URL ?? '');
   const { error } = await admin.auth.admin.inviteUserByEmail(email, {
     data: { client_id: clientId, full_name: fullName || undefined },
     redirectTo: `${site}/auth/callback`,

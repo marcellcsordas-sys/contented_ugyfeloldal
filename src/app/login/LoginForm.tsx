@@ -11,7 +11,8 @@ export default function LoginForm() {
     e.preventDefault();
     setState('sending');
     const supabase = createClient();
-    const site = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+    // Mindig arra a címre jön vissza a link, ahol a belépést kérték (ugyfel.contented.hu vagy vercel.app)
+    const site = window.location.origin;
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
       options: { emailRedirectTo: `${site}/auth/callback`, shouldCreateUser: false },

@@ -15,10 +15,10 @@ Stack: Next.js 15 (Vercel), Supabase (adatbázis, belépés, fájltárolás).
 ### 2. Belépés beállítása (Supabase → Authentication)
 
 1. **URL Configuration**
-   - Site URL: `https://portal.contented.hu`
-   - Redirect URLs: `https://portal.contented.hu/**` és a Vercel teszt-cím, pl. `https://contented-portal.vercel.app/**`
+   - Site URL: `https://ugyfel.contented.hu`
+   - Redirect URLs: `https://ugyfel.contented.hu/**` és `https://contented-ugyfeloldal.vercel.app/**`
 2. Az alap e-mail sablonokkal is működik a belépés és a meghívó. Az ingyenes Supabase-ben a sablon csak saját SMTP-vel szerkeszthető.
-3. Ajánlott: **SMTP** beállítása (Project Settings → Auth → SMTP), saját küldő címmel (pl. portal@contented.hu). A beépített küldő óránként csak néhány e-mailt enged. SMTP után a sablonokat érdemes magyarra írni, és a linket így megadni, hogy másik eszközön is működjön:
+3. Ajánlott: **SMTP** beállítása (Project Settings → Auth → SMTP), saját küldő címmel (pl. ugyfel.contented.hu). A beépített küldő óránként csak néhány e-mailt enged. SMTP után a sablonokat érdemes magyarra írni, és a linket így megadni, hogy másik eszközön is működjön:
    - *Magic Link*: `{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=email`
    - *Invite user*: `{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=invite`
 
@@ -39,12 +39,12 @@ Stack: Next.js 15 (Vercel), Supabase (adatbázis, belépés, fájltárolás).
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY` (titkos, csak itt)
-   - `NEXT_PUBLIC_SITE_URL` = `https://portal.contented.hu`
+   - `NEXT_PUBLIC_SITE_URL` = `https://ugyfel.contented.hu`
 3. Deploy.
 
 ### 5. Domain (MHosting)
 
-1. Vercel → Project → Settings → Domains → add: `portal.contented.hu`.
+1. Vercel → Project → Settings → Domains → add: `ugyfel.contented.hu`.
 2. MHosting DNS-kezelő → új rekord: típus `CNAME`, név `portal`, érték `cname.vercel-dns.com`.
 3. Pár perc, és a Vercel kiírja, hogy él. A HTTPS automatikus.
 
