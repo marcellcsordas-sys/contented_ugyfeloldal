@@ -14,7 +14,7 @@ export default function OfferModal({ offer, contactName, pending, onAccept, onCl
         <span className="badge badge-blue" style={{ alignSelf: 'flex-start' }}>
           Ajánlat neked{first ? `, ${first}` : ''}
         </span>
-        <h2 className="h1" style={{ fontSize: 40, lineHeight: '42px', letterSpacing: -1.6 }}>
+        <h2 className="h1 offer-title" style={{ fontSize: 40, lineHeight: '42px', letterSpacing: -1.6 }}>
           {offer.title}
           {offer.price_label && <span className="second">{offer.price_label}</span>}
         </h2>

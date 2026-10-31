@@ -13,15 +13,13 @@ export function PlayIcon({ size = 14 }: { size?: number }) {
   );
 }
 
-// Kártyán fix magasság, részletes nézetben valódi képarány.
+// Kártyán fix magasság (mobilon kis bélyegkép), részletes nézetben valódi képarány.
 export default function PostVisual({ post, large = false }: { post: PostWithMedia; large?: boolean }) {
   const label = `${post.is_video ? 'Videó' : 'Kreatív'} ${post.format}`;
-  const style: React.CSSProperties = large
-    ? { aspectRatio: ratioOf(post.format), width: '100%', maxHeight: 680, borderRadius: 24, padding: 30 }
-    : { height: 230 };
+  const style: React.CSSProperties | undefined = large ? { aspectRatio: ratioOf(post.format) } : undefined;
 
   return (
-    <div className={`visual ${post.visual_url ? '' : 'placeholder'}`} style={style}>
+    <div className={`visual ${large ? 'visual-large' : 'visual-card'} ${post.visual_url ? '' : 'placeholder'}`} style={style}>
       {post.visual_url && post.is_video && (
         large ? (
           <video src={post.visual_url} controls playsInline preload="metadata" />
@@ -31,7 +29,7 @@ export default function PostVisual({ post, large = false }: { post: PostWithMedi
       )}
       {post.visual_url && !post.is_video && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={post.visual_url} alt={post.visual_headline ?? `${post.platform} kreatív`} />
+        <img src={post.visual_url} alt={post.visual_headline ?? `${post.platform} kreatív`} loading={large ? 'eager' : 'lazy'} />
       )}
       <span className="tag">{label}</span>
       {post.is_video && !(large && post.visual_url) && (
@@ -39,10 +37,8 @@ export default function PostVisual({ post, large = false }: { post: PostWithMedi
       )}
       {!post.visual_url && (
         <>
-          <span className="headline" style={large ? { fontSize: 36, lineHeight: '38px' } : undefined}>
-            {post.visual_headline || 'A vizuál készül'}
-          </span>
-          <span className="tiny muted" style={{ position: 'relative', marginTop: 8 }}>
+          <span className="headline">{post.visual_headline || 'A vizuál készül'}</span>
+          <span className="tiny muted visual-note">
             {post.visual_headline ? 'Vizuál feltöltés alatt' : 'Még nincs feltöltve'}
           </span>
         </>

@@ -42,22 +42,22 @@ export default async function AdminHome() {
               <div className="empty">Még nincs ügyfél. Hozd létre az elsőt jobb oldalt.</div>
             ) : (
               <div className="card scroll-x" style={{ padding: 6 }}>
-                <table className="table">
+                <table className="table table-stack table-stats">
                   <thead>
                     <tr><th>Ügyfél</th><th>Összes</th><th>Vár</th><th>Módosítás</th><th>Elfogadva</th><th></th></tr>
                   </thead>
                   <tbody>
                     {(clients ?? []).map((c) => (
                       <tr key={c.id}>
-                        <td>
+                        <td className="ts-main">
                           <div style={{ fontWeight: 500 }}>{c.name}</div>
                           <div className="tiny muted">{c.contact_name}</div>
                         </td>
-                        <td>{stat(c.id)}</td>
-                        <td>{stat(c.id, 'var')}</td>
-                        <td>{stat(c.id, 'mod')}</td>
-                        <td>{stat(c.id, 'ok')}</td>
-                        <td style={{ textAlign: 'right' }}>
+                        <td className="ts-stat" data-label="Összes">{stat(c.id)}</td>
+                        <td className="ts-stat" data-label="Vár">{stat(c.id, 'var')}</td>
+                        <td className="ts-stat" data-label="Módosítás">{stat(c.id, 'mod')}</td>
+                        <td className="ts-stat" data-label="Elfogadva">{stat(c.id, 'ok')}</td>
+                        <td className="ts-actions" style={{ textAlign: 'right' }}>
                           <Link className="btn btn-ghost btn-sm" href={`/admin/clients/${c.id}`}>Megnyitom</Link>
                         </td>
                       </tr>

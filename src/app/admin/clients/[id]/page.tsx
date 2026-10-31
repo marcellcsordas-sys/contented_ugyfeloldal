@@ -46,17 +46,17 @@ export default async function ClientAdminPage({
           <section className="split-main">
             <div className="row between" style={{ alignItems: 'flex-end', gap: 18 }}>
               <div className="stack" style={{ gap: 10 }}>
-                <div className="row">
-                  <Link className="chip" href={`${base}?m=${shiftMonth(month, -1)}`} aria-label="Előző hónap">‹</Link>
+                <div className="row month-row">
+                  <Link className="chip month-nav" href={`${base}?m=${shiftMonth(month, -1)}`} aria-label="Előző hónap">‹</Link>
                   <span className="eyebrow">{client.name} · {ml.full}</span>
-                  <Link className="chip" href={`${base}?m=${shiftMonth(month, 1)}`} aria-label="Következő hónap">›</Link>
+                  <Link className="chip month-nav" href={`${base}?m=${shiftMonth(month, 1)}`} aria-label="Következő hónap">›</Link>
                 </div>
                 <h1 className="h1">
                   {client.name}.
                   <span className="second">{posts?.length ?? 0} tartalom ebben a hónapban.</span>
                 </h1>
               </div>
-              <div className="row">
+              <div className="row head-actions">
                 <Link className="btn btn-ghost" href={`${base}/preview?m=${month}`}>Ügyfélnézet</Link>
                 <Link className="btn btn-light" href={`${base}/posts/new?m=${month}`}>Új tartalom</Link>
               </div>
@@ -66,22 +66,22 @@ export default async function ClientAdminPage({
               <div className="empty">Ebben a hónapban még nincs tartalom. Kattints az „Új tartalom” gombra.</div>
             ) : (
               <div className="card scroll-x" style={{ padding: 6 }}>
-                <table className="table">
+                <table className="table table-stack">
                   <thead>
                     <tr><th>#</th><th>Dátum</th><th>Platform · típus</th><th>Vizuál</th><th>Státusz</th><th></th></tr>
                   </thead>
                   <tbody>
                     {(posts ?? []).map((p) => (
                       <tr key={p.id}>
-                        <td>{p.number ?? ''}</td>
-                        <td style={{ whiteSpace: 'nowrap' }}>{formatPostDate(p.publish_date)}</td>
-                        <td>
+                        <td className="ts-num">{p.number ? `#${p.number}` : ''}</td>
+                        <td className="ts-date" style={{ whiteSpace: 'nowrap' }}>{formatPostDate(p.publish_date)}</td>
+                        <td className="ts-main">
                           <Link href={`${base}/posts/${p.id}`} style={{ fontWeight: 500 }}>{p.platform} · {p.content_type}</Link>
                           <div className="tiny muted">{(p.visual_headline || p.caption).slice(0, 60)}</div>
                         </td>
-                        <td className="tiny muted">{p.visual_path ? (p.is_video ? 'Videó feltöltve' : 'Kép feltöltve') : 'Nincs fájl'}</td>
-                        <td><span className={`pill ${STATUS[p.status].cls}`}>{STATUS[p.status].label}</span></td>
-                        <td><PostRowActions clientId={id} postId={p.id} status={p.status} /></td>
+                        <td className="tiny muted ts-file">{p.visual_path ? (p.is_video ? 'Videó feltöltve' : 'Kép feltöltve') : 'Nincs fájl'}</td>
+                        <td className="ts-status"><span className={`pill ${STATUS[p.status].cls}`}>{STATUS[p.status].label}</span></td>
+                        <td className="ts-actions"><PostRowActions clientId={id} postId={p.id} status={p.status} /></td>
                       </tr>
                     ))}
                   </tbody>

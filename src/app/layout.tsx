@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { DM_Sans } from 'next/font/google';
 import './globals.css';
 
@@ -12,6 +12,13 @@ export const metadata: Metadata = {
   title: 'Contented Portál',
   description: 'Tartalom-jóváhagyás a Contented ügyfeleinek',
   robots: { index: false, follow: false },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: '#000000',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

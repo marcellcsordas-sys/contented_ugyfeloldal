@@ -65,7 +65,7 @@ export default function PortalView(props: Props) {
         { label: 'Poszt', used: posts.filter((p) => !p.is_video).length, total: pkg.posts_quota },
         { label: 'Videó', used: posts.filter((p) => p.is_video).length, total: pkg.videos_quota },
         { label: 'Módosítási kör', used: posts.reduce((a, p) => a + p.revision_count, 0), total: pkg.revisions_quota },
-      ]
+      ].filter((u) => u.total > 0)
     : [];
 
   function onApproveAll() {
@@ -95,10 +95,10 @@ export default function PortalView(props: Props) {
         <section className="split-main" aria-label="Havi tartalmak">
           <div className="row between" style={{ alignItems: 'flex-end', gap: 18 }}>
             <div className="stack" style={{ gap: 10 }}>
-              <div className="row">
-                <Link className="chip" href={`${basePath}?m=${shiftMonth(month, -1)}`} aria-label="Előző hónap">‹</Link>
-                <span className="eyebrow">Tartalomnaptár · {ml.full}</span>
-                <Link className="chip" href={`${basePath}?m=${shiftMonth(month, 1)}`} aria-label="Következő hónap">›</Link>
+              <div className="row month-row">
+                <Link className="chip month-nav" href={`${basePath}?m=${shiftMonth(month, -1)}`} aria-label="Előző hónap">‹</Link>
+                <span className="eyebrow"><span className="hide-mobile">Tartalomnaptár · </span>{ml.full}</span>
+                <Link className="chip month-nav" href={`${basePath}?m=${shiftMonth(month, 1)}`} aria-label="Következő hónap">›</Link>
               </div>
               <h1 className="h1">
                 {capitalize(ml.name)}. {posts.length} tartalom.
@@ -112,7 +112,7 @@ export default function PortalView(props: Props) {
               </h1>
             </div>
             {mode === 'client' && waiting > 0 && (
-              <button className="btn btn-light" onClick={onApproveAll} disabled={pending}>
+              <button className="btn btn-light approve-all" onClick={onApproveAll} disabled={pending}>
                 <CheckIcon />
                 Mind a {waiting} tartalmat elfogadom
               </button>
@@ -121,7 +121,7 @@ export default function PortalView(props: Props) {
 
           {error && <p className="error small" style={{ margin: 0 }}>{error}</p>}
 
-          <div className="row" role="group" aria-label="Szűrés státusz szerint" style={{ gap: 6 }}>
+          <div className="row filter-row" role="group" aria-label="Szűrés státusz szerint" style={{ gap: 6 }}>
             {filterKeys.map((k) => (
               <button
                 key={k}
@@ -143,22 +143,22 @@ export default function PortalView(props: Props) {
               {visible.map((p) => {
                 const text = p.caption.replace(/\n+/g, ' ');
                 return (
-                  <article key={p.id} className="post-card">
+                  <article key={p.id} className="post-card" onClick={() => setOpenId(p.id)}>
                     <PostVisual post={p} />
                     <div className="post-body">
-                      <div className="row between">
-                        <span className="tiny secondary">
+                      <div className="row between card-meta">
+                        <span className="tiny secondary ellipsis">
                           {p.number ? `#${p.number} · ` : ''}{p.platform} · {p.content_type}
                         </span>
                         <span className={`pill ${STATUS[p.status].cls}`}>{STATUS[p.status].label}</span>
                       </div>
                       <span className="small" style={{ fontWeight: 500 }}>{formatPostDate(p.publish_date)}</span>
                       <p className="excerpt">{text.length > 130 ? text.slice(0, 127) + '...' : text || 'A szöveg készül.'}</p>
-                      <div className="row between" style={{ marginTop: 'auto', paddingTop: 6 }}>
+                      <div className="row between card-foot" style={{ marginTop: 'auto', paddingTop: 6 }}>
                         <span className="tiny muted row" style={{ gap: 6 }}>
                           <CommentIcon /> {p.comments.length} komment
                         </span>
-                        <button className="btn btn-ghost btn-sm" onClick={() => setOpenId(p.id)}>
+                        <button className="btn btn-ghost btn-sm card-open" onClick={(e) => { e.stopPropagation(); setOpenId(p.id); }}>
                           {p.status === 'var' ? 'Átnézem' : 'Megnyitom'}
                         </button>
                       </div>

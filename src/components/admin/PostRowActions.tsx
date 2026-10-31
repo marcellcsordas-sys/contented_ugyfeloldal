@@ -8,12 +8,11 @@ import type { PostStatus } from '@/lib/types';
 export default function PostRowActions({ clientId, postId, status }: { clientId: string; postId: string; status: PostStatus }) {
   const [pending, start] = useTransition();
   return (
-    <div className="row" style={{ justifyContent: 'flex-end', flexWrap: 'nowrap' }}>
+    <div className="row row-actions" style={{ justifyContent: 'flex-end', flexWrap: 'nowrap' }}>
       <label className="sr-only" htmlFor={`st-${postId}`} style={{ position: 'absolute', left: -9999 }}>Státusz</label>
       <select
         id={`st-${postId}`}
-        className="select"
-        style={{ width: 170, padding: '6px 10px' }}
+        className="select row-select"
         value={status}
         disabled={pending}
         onChange={(e) => start(async () => { await setStatusAdmin(clientId, postId, e.target.value as PostStatus); })}

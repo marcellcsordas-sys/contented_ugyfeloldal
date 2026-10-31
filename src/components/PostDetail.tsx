@@ -45,13 +45,27 @@ export default function PostDetail({ post, onClose }: { post: PostWithMedia; onC
     : 'Már kint van. Kommentet még írhatsz.';
 
   return (
-    <div className="overlay" role="dialog" aria-modal="true" aria-label="Tartalom részletei" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+    <div className="overlay overlay-sheet" role="dialog" aria-modal="true" aria-label="Tartalom részletei" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="modal">
+        {/* Mobilon rögzített fejléc: mindig elérhető a bezárás */}
+        <div className="sheet-head">
+          <div className="stack" style={{ gap: 2, minWidth: 0 }}>
+            <span className="tiny secondary ellipsis">
+              {post.number ? `#${post.number} · ` : ''}{post.platform} · {post.content_type}
+            </span>
+            <span className="sheet-date">{formatPostDate(post.publish_date)}</span>
+          </div>
+          <div className="row" style={{ flexWrap: 'nowrap' }}>
+            <span className={`pill ${STATUS[post.status].cls}`}>{STATUS[post.status].label}</span>
+            <button className="btn btn-ghost icon-btn" onClick={onClose} aria-label="Bezárás"><CloseIcon /></button>
+          </div>
+        </div>
+
         <div className="modal-visual">
           <PostVisual post={post} large />
         </div>
         <div className="modal-body">
-          <div className="row between" style={{ alignItems: 'flex-start' }}>
+          <div className="row between desktop-only" style={{ alignItems: 'flex-start' }}>
             <div className="stack" style={{ gap: 6 }}>
               <span className="tiny secondary">
                 {post.number ? `#${post.number} · ` : ''}{post.platform} · {post.content_type}
@@ -84,12 +98,12 @@ export default function PostDetail({ post, onClose }: { post: PostWithMedia; onC
                 <div className={`avatar ${c.author_role === 'admin' ? 'agency' : ''}`}>
                   {(c.author_name ?? '?').charAt(0).toUpperCase()}
                 </div>
-                <div className="stack" style={{ gap: 2 }}>
+                <div className="stack" style={{ gap: 2, minWidth: 0 }}>
                   <span className="tiny secondary">
                     <strong style={{ color: '#fff', fontWeight: 600 }}>{c.author_name ?? 'Ismeretlen'}</strong>
                     {' · '}{c.author_role === 'admin' ? 'Contented' : 'Ügyfél'}{' · '}{formatShortDate(c.created_at)}
                   </span>
-                  <span className="small" style={{ color: 'rgba(255,255,255,0.78)', whiteSpace: 'pre-line' }}>{c.body}</span>
+                  <span className="small" style={{ color: 'rgba(255,255,255,0.78)', whiteSpace: 'pre-line', overflowWrap: 'anywhere' }}>{c.body}</span>
                 </div>
               </div>
             ))}
@@ -103,34 +117,37 @@ export default function PostDetail({ post, onClose }: { post: PostWithMedia; onC
             />
           </div>
 
+          {!actionable && <span className="small muted">{lockedText}</span>}
           {error && <p className="error small" style={{ margin: 0 }}>{error}</p>}
 
-          {actionable ? (
-            <div className="row">
-              <button className="btn btn-light" style={{ flex: '1 1 160px' }} disabled={pending}
-                onClick={() => run(() => setPostStatus(post.id, 'ok', draft))}>
-                Elfogadom
-              </button>
-              <button className="btn btn-ghost" style={{ flex: '1 1 160px' }} disabled={pending}
-                onClick={() => run(() => setPostStatus(post.id, 'mod', draft))}>
-                Módosítást kérek
-              </button>
-            </div>
-          ) : (
-            <div className="row">
-              <span className="small muted" style={{ flex: '1 1 200px' }}>{lockedText}</span>
-              <button className="btn btn-ghost" disabled={pending || !draft.trim()}
+          {/* Mobilon a képernyő aljára tapad */}
+          <div className="detail-actions">
+            {actionable ? (
+              <>
+                <div className="row" style={{ flexWrap: 'nowrap' }}>
+                  <button className="btn btn-light" style={{ flex: '1 1 0' }} disabled={pending}
+                    onClick={() => run(() => setPostStatus(post.id, 'ok', draft))}>
+                    Elfogadom
+                  </button>
+                  <button className="btn btn-ghost" style={{ flex: '1 1 0' }} disabled={pending}
+                    onClick={() => run(() => setPostStatus(post.id, 'mod', draft))}>
+                    Módosítást kérek
+                  </button>
+                </div>
+                {draft.trim() && (
+                  <button className="btn btn-ghost btn-sm" disabled={pending}
+                    onClick={() => run(() => addComment(post.id, draft))}>
+                    Csak kommentet küldök
+                  </button>
+                )}
+              </>
+            ) : (
+              <button className="btn btn-ghost" style={{ width: '100%' }} disabled={pending || !draft.trim()}
                 onClick={() => run(() => addComment(post.id, draft))}>
                 Komment küldése
               </button>
-            </div>
-          )}
-          {actionable && draft.trim() && (
-            <button className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }} disabled={pending}
-              onClick={() => run(() => addComment(post.id, draft))}>
-              Csak kommentet küldök
-            </button>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>
