@@ -46,6 +46,9 @@ export default async function AdsPage({ previewId, m }: { previewId?: string; m?
   const engagements = sum((r) => r.engagements);
   const followers = sum((r) => r.new_followers);
   const active = sum((r) => r.active_ads);
+  const clicks = sum((r) => r.clicks);
+  const leadLabel = reports.find((r) => r.leads > 0 && r.result_label && r.result_label !== 'Eredmény')?.result_label ?? 'Ajánlatkérés';
+  const lower = leadLabel.charAt(0).toLowerCase() + leadLabel.slice(1);
   const period = reports.find((r) => r.period_label)?.period_label;
   const updated = reports.map((r) => r.updated_at).sort().at(-1);
   const highlight = reports.find((r) => r.highlight)?.highlight ?? null;
@@ -90,30 +93,42 @@ export default async function AdsPage({ previewId, m }: { previewId?: string; m?
 
         {reports.length === 0 ? (
           <div className="empty">
-            Itt látod majd havonta, hány ajánlatkérést hoztak a hirdetések, hány emberhez jutottunk el, és melyik hirdetés teljesített a legjobban.
+            Itt látod majd havonta, mit hoztak a hirdetések, hány emberhez jutottunk el, és melyik hirdetés teljesített a legjobban.
           </div>
         ) : (
           <>
             <div className="kpi-grid">
-              <Kpi
-                accent
-                label="Ajánlatkérés"
-                value={n(leads)}
-                hint={leads > 0 ? `${formatFt(Math.round(leadsSpend / leads))} / ajánlatkérés` : 'Az ajánlatkérő hirdetések futnak'}
-              />
+              {leads > 0 ? (
+                <Kpi
+                  accent
+                  label={leadLabel}
+                  value={n(leads)}
+                  hint={leadsSpend > 0 ? `${formatFt(Math.round(leadsSpend / leads))} / ${lower}` : undefined}
+                />
+              ) : (
+                <Kpi accent label="Kattintás a weboldalra" value={n(clicks)} hint={clicks > 0 ? `${formatFt(Math.round(spend / clicks))} / kattintás` : undefined} />
+              )}
               <Kpi label="Elért emberek" value={n(reach)} hint={`${n(impressions)} megjelenés`} />
               <Kpi label="Interakció" value={n(engagements)} hint="megtekintés, kedvelés, hozzászólás, megosztás" />
-              <Kpi label="Új követő" value={n(followers)} hint={`${n(active)} hirdetés fut most`} />
+              {followers > 0 || leads === 0 ? (
+                <Kpi label="Új követő" value={n(followers)} hint={active > 0 ? `${n(active)} hirdetés fut most` : undefined} />
+              ) : (
+                <Kpi label="Kattintás a weboldalra" value={n(clicks)} hint={clicks > 0 ? `${formatFt(Math.round(spend / clicks))} / kattintás` : undefined} />
+              )}
             </div>
 
             <div className="dash-row">
               {highlight && (
-                <div className="card highlight-card">
-                  <div className="hl-img">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    {hlImg ? <img src={hlImg} alt={highlight.title} /> : <span className="muted small">Kép</span>}
-                    <span className="badge badge-blue hl-badge">A hónap kedvence</span>
-                  </div>
+                <div className={`card highlight-card ${hlImg ? '' : 'hl-noimg'}`}>
+                  {hlImg ? (
+                    <div className="hl-img">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={hlImg} alt={highlight.title} />
+                      <span className="badge badge-blue hl-badge">A hónap kedvence</span>
+                    </div>
+                  ) : (
+                    <span className="badge badge-blue" style={{ alignSelf: 'flex-start', margin: '14px 0 0 14px' }}>A hónap kedvence</span>
+                  )}
                   <div className="stack hl-body">
                     <div className="stack hl-head" style={{ gap: 4 }}>
                       <h2 className="h3">{highlight.title}</h2>
