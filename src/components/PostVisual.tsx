@@ -1,4 +1,5 @@
 import type { PostWithMedia } from '@/lib/types';
+import DriveVideo from './DriveVideo';
 
 function ratioOf(format: string) {
   const [a, b] = format.split(':').map(Number);
@@ -17,6 +18,9 @@ export function PlayIcon({ size = 14 }: { size?: number }) {
 export default function PostVisual({ post, large = false }: { post: PostWithMedia; large?: boolean }) {
   const label = `${post.content_type || (post.is_video ? 'Videó' : 'Kreatív')} ${post.format}`;
   const style: React.CSSProperties | undefined = large ? { aspectRatio: ratioOf(post.format) } : undefined;
+  if (large && post.video_url) {
+    return <DriveVideo url={post.video_url} cover={post.visual_url} ratio={ratioOf(post.format)} />;
+  }
   // Videós posztnál lehet, hogy csak borítókép van feltöltve
   const videoFile = post.is_video && /\.(mp4|mov|webm|m4v)$/i.test(post.visual_path ?? '');
 

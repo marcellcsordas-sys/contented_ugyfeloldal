@@ -125,6 +125,7 @@ export type PostInput = {
   visual_headline: string | null;
   caption: string;
   internal_note: string | null;
+  video_url: string | null;
   status: PostStatus;
 };
 

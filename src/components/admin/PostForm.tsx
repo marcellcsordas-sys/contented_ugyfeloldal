@@ -54,6 +54,7 @@ export default function PostForm({ clientId, post, month }: { clientId: string; 
           visual_headline: String(fd.get('visual_headline') ?? '').trim() || null,
           caption: String(fd.get('caption') ?? ''),
           internal_note: String(fd.get('internal_note') ?? '').trim() || null,
+          video_url: String(fd.get('video_url') ?? '').trim() || null,
           status: String(fd.get('status')) as PostStatus,
         };
         const r = await savePost(clientId, post?.id ?? null, input);
@@ -115,6 +116,12 @@ export default function PostForm({ clientId, post, month }: { clientId: string; 
         <label htmlFor="file">Vizuál vagy videó (kép, mp4, max. {MAX_MB} MB){post?.visual_path ? ' · üresen hagyva a mostani marad' : ''}</label>
         <input id="file" name="file" type="file" accept="image/*,video/mp4,video/quicktime,video/webm" className="input" />
         <span className="tiny muted">Tipp: telefonos .mov helyett mp4-et tölts fel, azt minden böngésző lejátssza.</span>
+      </div>
+
+      <div className="field">
+        <label htmlFor="video_url">Videó Google Drive linkje (nagy videóhoz, a feltöltött kép lesz a borítója)</label>
+        <input id="video_url" name="video_url" type="url" className="input" placeholder="https://drive.google.com/file/d/.../view" defaultValue={post?.video_url ?? ''} />
+        <span className="tiny muted">A Drive-ban a fájl megosztása legyen: „Bárki, aki rendelkezik a linkkel: megtekintő”. A videó csak akkor töltődik be, ha az ügyfél rákattint.</span>
       </div>
 
       <div className="field">
