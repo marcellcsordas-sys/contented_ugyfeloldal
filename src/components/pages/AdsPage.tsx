@@ -1,12 +1,12 @@
 import Link from 'next/link';
-import { capitalize, formatFt, monthLabel, normalizeMonth, shiftMonth } from '@/lib/format';
+import { capitalize, formatFt, formatNum, monthLabel, normalizeMonth, shiftMonth } from '@/lib/format';
 import { getPortalCtx } from '@/lib/portal';
 import { signPaths } from '@/lib/session';
 import type { AdReport } from '@/lib/types';
 import PortalShell, { NoClient } from '@/components/PortalShell';
 
 function n(v: number | null | undefined) {
-  return (v ?? 0).toLocaleString('hu-HU').replace(/ /g, ' ');
+  return formatNum(v ?? 0);
 }
 
 const BAR_COLORS = ['#0055fe', '#7ea6ff', '#3cc878', '#ffb37a'];
