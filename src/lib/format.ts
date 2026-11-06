@@ -29,8 +29,13 @@ export function formatShortDate(iso: string) {
   return `${MONTHS_SHORT[d.getMonth()]} ${d.getDate()}.`;
 }
 
+// Ezres tagolás mindig (a magyar locale a 4 jegyű számot nem tagolja)
+export function formatNum(n: number) {
+  return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0');
+}
+
 export function formatFt(n: number) {
-  return n.toLocaleString('hu-HU').replace(/ /g, ' ') + ' Ft';
+  return formatNum(n) + '\u00a0Ft';
 }
 
 // Hónap kulcs: "2026-11"
