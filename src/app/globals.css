@@ -384,7 +384,7 @@ button, input, textarea, select { font-family: inherit; font-size: inherit; }
   .hl-stats { grid-area: stats; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 16px 12px 0; }
   .hl-note { grid-area: note; padding: 10px 12px 0; }
   .hl-stat-value { font-size: 22px; line-height: 26px; }
-  .hl-badge { font-size: 9px; padding: 2px 5px; top: 6px; left: 6px; }
+  .hl-badge { font-size: 8px; line-height: 12px; letter-spacing: 0.3px; padding: 2px 5px; top: 6px; left: 6px; white-space: nowrap; }
 
 }
 .brief-dl { margin: 0; display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 10px 16px; font-size: 14px; line-height: 22px; }
