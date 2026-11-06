@@ -65,7 +65,7 @@ export default async function AdsPage({ previewId, m }: { previewId?: string; m?
               {reports.length === 0
                 ? 'Ehhez a hónaphoz még nincs hirdetési riport.'
                 : reach
-                  ? `${n(reach)} embert értek el a hirdetéseid.`
+                  ? `${n(reach)} emberhez jutottak el a hirdetéseid.`
                   : `${n(active)} hirdetés dolgozik érted.`}
             </span>
           </h1>
