@@ -223,7 +223,7 @@ export default async function AdsPage({ previewId, m }: { previewId?: string; m?
                 {reports.filter((r) => (r.items ?? []).length > 0).map((r) => {
                   const max = Math.max(...r.items.map((i) => i.spend), 1);
                   return (
-                    <div key={r.id} className="card stack ad-items" style={{ gap: 4 }}>
+                    <div key={r.id} className={`card stack ad-items ai-${r.platform}`} style={{ gap: 4 }}>
                       <div className="row between" style={{ paddingBottom: 8 }}>
                         <span className="row" style={{ gap: 8 }}>
                           <span className={`pf-dot pf-${r.platform}`} />

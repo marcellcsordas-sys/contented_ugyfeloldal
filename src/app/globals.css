@@ -445,3 +445,4 @@ button, input, textarea, select { font-family: inherit; font-size: inherit; }
   .ai-spend { grid-area: spend; align-self: start; }
   .ai-res { grid-area: res; text-align: left; align-items: flex-start; flex-direction: row !important; gap: 10px !important; }
 }
+.ai-google .ai-bar span { background: #3cc878; }
