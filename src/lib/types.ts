@@ -47,6 +47,7 @@ export type Post = {
   caption: string;
   internal_note: string | null;
   video_url: string | null;
+  video_path: string | null;
   status: PostStatus;
   revision_count: number;
 };
@@ -60,7 +61,7 @@ export type Comment = {
   created_at: string;
 };
 
-export type PostWithMedia = Post & { visual_url: string | null; comments: Comment[] };
+export type PostWithMedia = Post & { visual_url: string | null; video_src: string | null; comments: Comment[] };
 
 export type AdReport = {
   id: string;

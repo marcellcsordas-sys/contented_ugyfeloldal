@@ -29,11 +29,12 @@ export async function loadMonthPosts(supabase: Supa, clientId: string, month: st
         .returns<Comment[]>()
     : { data: [] as Comment[] };
 
-  const urls = await signPaths(supabase, list.map((p) => p.visual_path).filter((x): x is string => !!x));
+  const urls = await signPaths(supabase, list.flatMap((p) => [p.visual_path, p.video_path]).filter((x): x is string => !!x));
 
   return list.map((p) => ({
     ...p,
     visual_url: p.visual_path ? urls.get(p.visual_path) ?? null : null,
+    video_src: p.video_path ? urls.get(p.video_path) ?? null : null,
     comments: (comments ?? []).filter((c) => c.post_id === p.id),
   }));
 }

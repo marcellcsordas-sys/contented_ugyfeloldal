@@ -18,6 +18,13 @@ export function PlayIcon({ size = 14 }: { size?: number }) {
 export default function PostVisual({ post, large = false }: { post: PostWithMedia; large?: boolean }) {
   const label = `${post.content_type || (post.is_video ? 'Videó' : 'Kreatív')} ${post.format}`;
   const style: React.CSSProperties | undefined = large ? { aspectRatio: ratioOf(post.format) } : undefined;
+  if (large && post.video_src) {
+    return (
+      <div className="drive-video" style={{ aspectRatio: ratioOf(post.format) }}>
+        <video src={post.video_src} poster={post.visual_url ?? undefined} controls playsInline preload="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', background: '#111' }} />
+      </div>
+    );
+  }
   if (large && post.video_url) {
     return <DriveVideo url={post.video_url} cover={post.visual_url} ratio={ratioOf(post.format)} />;
   }

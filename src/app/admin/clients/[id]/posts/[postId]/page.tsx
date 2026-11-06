@@ -20,8 +20,8 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
   ]);
   if (!client || !post) notFound();
 
-  const urls = await signPaths(supabase, post.visual_path ? [post.visual_path] : []);
-  const withMedia = { ...post, visual_url: post.visual_path ? urls.get(post.visual_path) ?? null : null, comments: comments ?? [] };
+  const urls = await signPaths(supabase, [post.visual_path, post.video_path].filter((x): x is string => !!x));
+  const withMedia = { ...post, visual_url: post.visual_path ? urls.get(post.visual_path) ?? null : null, video_src: post.video_path ? urls.get(post.video_path) ?? null : null, comments: comments ?? [] };
   const month = post.publish_date.slice(0, 7);
 
   return (
