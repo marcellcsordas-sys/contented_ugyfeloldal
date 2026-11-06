@@ -115,7 +115,7 @@ export default async function AdsPage({ previewId, m }: { previewId?: string; m?
                     <span className="badge badge-blue hl-badge">A hónap kedvence</span>
                   </div>
                   <div className="stack hl-body">
-                    <div className="stack" style={{ gap: 4 }}>
+                    <div className="stack hl-head" style={{ gap: 4 }}>
                       <h2 className="h3">{highlight.title}</h2>
                       {highlight.subtitle && <span className="small muted">{highlight.subtitle}</span>}
                     </div>
@@ -127,7 +127,7 @@ export default async function AdsPage({ previewId, m }: { previewId?: string; m?
                         </div>
                       ))}
                     </div>
-                    {highlight.note && <p className="small secondary" style={{ margin: 0 }}>{highlight.note}</p>}
+                    {highlight.note && <p className="small secondary hl-note" style={{ margin: 0 }}>{highlight.note}</p>}
                   </div>
                 </div>
               )}
@@ -175,7 +175,7 @@ export default async function AdsPage({ previewId, m }: { previewId?: string; m?
 
             {updated && (
               <span className="tiny muted">
-                Utolsó frissítés: {new Date(updated).toLocaleDateString('hu-HU')}. A számok a hirdetési fiókból származnak, a hónap végéig tovább nőnek.
+                Utolsó frissítés: {new Date(updated).toLocaleDateString('hu-HU')} A számok a hirdetési fiókból származnak, a hónap végéig tovább nőnek.
               </span>
             )}
           </>

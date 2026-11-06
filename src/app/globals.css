@@ -376,8 +376,13 @@ button, input, textarea, select { font-family: inherit; font-size: inherit; }
   .kpi-label { font-size: 11px; }
   .kpi-hint { font-size: 12px; line-height: 17px; }
   .dash-row { grid-template-columns: minmax(0, 1fr); }
-  .highlight-card { grid-template-columns: 120px minmax(0, 1fr); }
-  .hl-body { padding: 12px 10px; gap: 10px; }
+  .highlight-card { grid-template-columns: 104px minmax(0, 1fr); grid-template-areas: "img head" "stats stats" "note note"; gap: 0 14px; padding: 6px 6px 18px; }
+  .hl-img { grid-area: img; }
+  .hl-body { display: contents; }
+  .hl-head { grid-area: head; align-self: center; padding-right: 8px; }
+  .hl-head .h3 { font-size: 19px; line-height: 24px; }
+  .hl-stats { grid-area: stats; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 16px 12px 0; }
+  .hl-note { grid-area: note; padding: 10px 12px 0; }
   .hl-stat-value { font-size: 22px; line-height: 26px; }
   .hl-badge { font-size: 9px; padding: 2px 5px; top: 6px; left: 6px; }
 

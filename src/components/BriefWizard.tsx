@@ -368,7 +368,7 @@ export default function BriefWizard(props: Props) {
               </button>
             ) : (
               <button type="button" className="btn btn-blue" disabled={pending || missing.length > 0} onClick={onSubmit}>
-                {pending ? 'Küldés...' : submitted ? 'Módosítások mentése' : 'Elküldöm a tervet'}
+                {pending ? 'Küldés...' : submitted ? <>Mentés<span className="hide-mobile">&nbsp;a módosításokkal</span></> : <>Elküldöm<span className="hide-mobile">&nbsp;a tervet</span></>}
               </button>
             )}
           </div>
