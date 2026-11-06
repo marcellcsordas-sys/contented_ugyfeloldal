@@ -208,7 +208,7 @@ export default function BriefWizard(props: Props) {
           <div className="bar"><span style={{ width: `${pct}%` }} /></div>
           <div className="step-dots" aria-hidden="true">
             {STEPS.map((s, i) => (
-              <button key={s} type="button" className={`step-dot ${i === step ? 'cur' : ''} ${i < step || stepValid(i) && i !== step ? 'done' : ''}`} onClick={() => go(i)} tabIndex={-1}>
+              <button key={s} type="button" className={`step-dot ${i === step ? 'cur' : ''} ${i < step ? 'done' : ''}`} onClick={() => go(i)} tabIndex={-1}>
                 {s}
               </button>
             ))}
@@ -218,7 +218,7 @@ export default function BriefWizard(props: Props) {
         <div className="card stack wizard-card">
           {step === 0 && (
             <>
-              <Q title={`Mi ${monthIn(ml.name)} a legfontosabb cél?`} hint="Válassz egyet. Ehhez igazítjuk a posztok hangsúlyát." required />
+              <Q title={`Mi a legfontosabb cél ${monthIn(ml.name)}?`} hint="Válassz egyet. Ehhez igazítjuk a posztok hangsúlyát." required />
               <div className="choices">
                 {[...GOALS, 'Egyéb'].map((g) => (
                   <Chip key={g} on={a.goal === g} onClick={() => set({ goal: g })}>{g}</Chip>

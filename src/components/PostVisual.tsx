@@ -15,7 +15,7 @@ export function PlayIcon({ size = 14 }: { size?: number }) {
 
 // Kártyán fix magasság (mobilon kis bélyegkép), részletes nézetben valódi képarány.
 export default function PostVisual({ post, large = false }: { post: PostWithMedia; large?: boolean }) {
-  const label = `${post.is_video ? 'Videó' : 'Kreatív'} ${post.format}`;
+  const label = `${post.content_type || (post.is_video ? 'Videó' : 'Kreatív')} ${post.format}`;
   const style: React.CSSProperties | undefined = large ? { aspectRatio: ratioOf(post.format) } : undefined;
 
   return (
