@@ -3,6 +3,7 @@ import { getPortalCtx, usageRows } from '@/lib/portal';
 import type { Offer, Package, Post } from '@/lib/types';
 import PortalShell, { NoClient } from '@/components/PortalShell';
 import { CheckIcon } from '@/components/PortalView';
+import UsageList from '@/components/UsageList';
 
 export default async function PackagePage({ previewId }: { previewId?: string; m?: string }) {
   const ctx = await getPortalCtx(previewId);
@@ -74,18 +75,7 @@ export default async function PackagePage({ previewId }: { previewId?: string; m
               {usage.length > 0 && (
                 <div className="card stack">
                   <span className="eyebrow">Felhasználás · {ml.name}</span>
-                  {usage.map((u) => {
-                    const pct = u.total > 0 ? Math.min(100, Math.round((u.used / u.total) * 100)) : 0;
-                    return (
-                      <div key={u.label} className="stack" style={{ gap: 6 }}>
-                        <div className="row between small">
-                          <span className="secondary">{u.label}</span>
-                          <span style={{ fontWeight: 600 }}>{u.used} / {u.total}</span>
-                        </div>
-                        <div className="bar"><span className={pct >= 100 ? 'full' : ''} style={{ width: `${pct}%` }} /></div>
-                      </div>
-                    );
-                  })}
+                  <UsageList rows={usage} />
                   <span className="tiny muted">
                     A módosítási kör havi szinten számít: egy körben az összes posztra jelezheted a kéréseidet.
                   </span>

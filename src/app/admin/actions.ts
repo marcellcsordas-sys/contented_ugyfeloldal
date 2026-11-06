@@ -178,9 +178,21 @@ export async function deletePost(clientId: string, postId: string): Promise<Resu
 
 export async function saveAdReport(clientId: string, month: string, platform: 'meta' | 'google', fd: FormData): Promise<Result> {
   const { supabase } = await requireAdmin();
+  // Soronként: név | eredmény | költés | megjelenés | elérés | lezárult
+  const num = (v?: string) => {
+    const x = parseInt((v ?? '').replace(/\D/g, ''), 10);
+    return Number.isFinite(x) ? x : undefined;
+  };
   const topAds = lines(fd, 'top_ads').map((l) => {
-    const [name, ...rest] = l.split('|');
-    return { name: name.trim(), value: rest.join('|').trim() };
+    const [name, result, spend, impressions, reach, status] = l.split('|').map((x) => x.trim());
+    return {
+      name,
+      result: result || undefined,
+      spend: num(spend),
+      impressions: num(impressions),
+      reach: num(reach),
+      status: status?.toLowerCase().startsWith('lez') ? ('lezárult' as const) : ('aktív' as const),
+    };
   }).filter((x) => x.name);
   const budget = str(fd, 'budget');
   const reach = str(fd, 'reach');

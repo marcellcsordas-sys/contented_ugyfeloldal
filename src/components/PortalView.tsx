@@ -8,6 +8,7 @@ import { usageRows } from '@/lib/usage';
 import { briefDeadline } from '@/lib/brief';
 import { approveMonth, requestOffer } from '@/app/portal/actions';
 import PostVisual from './PostVisual';
+import UsageList from './UsageList';
 import PostDetail from './PostDetail';
 import OfferModal from './OfferModal';
 
@@ -199,18 +200,7 @@ export default function PortalView(props: Props) {
                 <span className="eyebrow">Felhasználás · {ml.name}</span>
                 <Link href={`${basePath}/csomag`} className="tiny muted">Csomagom</Link>
               </div>
-              {usage.map((u) => {
-                const pct = u.total > 0 ? Math.min(100, Math.round((u.used / u.total) * 100)) : 0;
-                return (
-                  <div key={u.label} className="stack" style={{ gap: 6 }}>
-                    <div className="row between small">
-                      <span className="secondary">{u.label}</span>
-                      <span style={{ fontWeight: 600 }}>{u.used} / {u.total}</span>
-                    </div>
-                    <div className="bar"><span className={pct >= 100 ? 'full' : ''} style={{ width: `${pct}%` }} /></div>
-                  </div>
-                );
-              })}
+              <UsageList rows={usage} />
               <span className="tiny muted">
                 Havonta 1 módosítási kör jár: ebben az összes posztra egyszerre jelezheted, mit változtassunk.
               </span>

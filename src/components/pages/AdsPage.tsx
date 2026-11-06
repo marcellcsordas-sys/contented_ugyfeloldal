@@ -39,6 +39,8 @@ export default async function AdsPage({ previewId, m }: { previewId?: string; m?
   const spend = reports.reduce((a, r) => a + r.spend, 0);
   const results = reports.reduce((a, r) => a + r.results, 0);
   const active = reports.reduce((a, r) => a + r.active_ads, 0);
+  const impressions = reports.reduce((a, r) => a + r.impressions, 0);
+  const reach = reports.reduce((a, r) => a + (r.reach ?? 0), 0);
   const updated = reports.map((r) => r.updated_at).sort().at(-1);
   const sameLabel = new Set(reports.map((r) => r.result_label)).size === 1 ? reports[0]?.result_label : 'Eredmény';
 
@@ -58,11 +60,13 @@ export default async function AdsPage({ previewId, m }: { previewId?: string; m?
             <Link className="chip month-nav" href={`${ctx.base}/hirdetesek?m=${shiftMonth(month, 1)}`} aria-label="Következő hónap">›</Link>
           </div>
           <h1 className="h1">
-            {reports.length === 0 ? `${capitalize(ml.name)}.` : `${formatFt(spend)} hirdetésre.`}
+            {reports.length === 0 ? `${capitalize(ml.name)}.` : `${n(impressions)} megjelenés.`}
             <span className="second">
               {reports.length === 0
                 ? 'Ehhez a hónaphoz még nincs hirdetési riport.'
-                : `${n(results)} ${sameLabel?.toLowerCase()}, ${n(active)} aktív hirdetés.`}
+                : reach
+                  ? `${n(reach)} embert értek el a hirdetéseid.`
+                  : `${n(active)} hirdetés dolgozik érted.`}
             </span>
           </h1>
         </div>
@@ -74,10 +78,12 @@ export default async function AdsPage({ previewId, m }: { previewId?: string; m?
         ) : (
           <>
             <div className="stat-grid">
-              <Stat label="Elköltött összeg" value={formatFt(spend)} />
-              <Stat label={sameLabel ?? 'Eredmény'} value={n(results)} />
-              <Stat label={`Egy ${(sameLabel ?? 'eredmény').toLowerCase()} ára`} value={results ? formatFt(Math.round(spend / results)) : '–'} />
-              <Stat label="Aktív hirdetések" value={n(active)} />
+              <Stat label="Megjelenés" value={n(impressions)} />
+              <Stat label="Elért emberek" value={reach ? n(reach) : '–'} />
+              {results > 0
+                ? <Stat label={sameLabel ?? 'Eredmény'} value={n(results)} hint={`${formatFt(Math.round(spend / results))} / db`} />
+                : <Stat label="Aktív hirdetések" value={n(active)} />}
+              <Stat label="Hirdetési költés" value={formatFt(spend)} />
             </div>
 
             {reports.map((r) => {
@@ -100,28 +106,50 @@ export default async function AdsPage({ previewId, m }: { previewId?: string; m?
                     </div>
                   )}
 
+                  {reports.length > 1 && (
                   <div className="stat-grid compact">
                     <Stat label="Költés" value={formatFt(r.spend)} />
                     <Stat label={r.result_label} value={n(r.results)} hint={r.results ? `${formatFt(Math.round(r.spend / r.results))} / db` : undefined} />
                     <Stat label="Megjelenés" value={n(r.impressions)} hint={r.reach ? `${n(r.reach)} elért ember` : undefined} />
-                    <Stat label="Kattintás" value={n(r.clicks)} hint={`Átkattintási arány: ${ctr}`} />
+                    {r.clicks > 0
+                      ? <Stat label="Kattintás" value={n(r.clicks)} hint={`Átkattintási arány: ${ctr}`} />
+                      : <Stat label="Aktív hirdetések" value={n(r.active_ads)} />}
                   </div>
+                  )}
 
                   {r.top_ads.length > 0 && (
-                    <div className="stack" style={{ gap: 8 }}>
-                      <span className="eyebrow">Legjobb hirdetések</span>
-                      {r.top_ads.map((a, i) => (
-                        <div key={i} className="panel row between" style={{ flexWrap: 'nowrap' }}>
-                          <span className="small ellipsis" style={{ minWidth: 0 }}>{a.name}</span>
-                          <span className="small" style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>{a.value}</span>
-                        </div>
-                      ))}
+                    <div className="stack" style={{ gap: 10 }}>
+                      <span className="eyebrow">Futó és lezárult hirdetések</span>
+                      <div className="scroll-x ad-table-wrap">
+                        <table className="table ad-table">
+                          <thead>
+                            <tr><th>Hirdetés</th><th>Eredmény</th><th className="num">Megjelenés</th><th className="num">Elérés</th><th className="num">Költés</th></tr>
+                          </thead>
+                          <tbody>
+                            {r.top_ads.map((a, i) => (
+                              <tr key={i}>
+                                <td className="ad-name">
+                                  <span className={`dot ${a.status === 'lezárult' ? 'dot-pub' : 'dot-ok'}`} />
+                                  <span>
+                                    <span style={{ fontWeight: 500 }}>{a.name}</span>
+                                    <span className="tiny muted" style={{ display: 'block' }}>{a.status === 'lezárult' ? 'Lezárult' : 'Fut'}</span>
+                                  </span>
+                                </td>
+                                <td className="ad-result" data-label="Eredmény">{a.result ?? a.value ?? '–'}</td>
+                                <td className="num" data-label="Megjelenés">{a.impressions != null ? n(a.impressions) : '–'}</td>
+                                <td className="num" data-label="Elérés">{a.reach != null ? n(a.reach) : '–'}</td>
+                                <td className="num" data-label="Költés">{a.spend != null ? formatFt(a.spend) : '–'}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
                   )}
 
                   {r.summary && (
                     <div className="stack" style={{ gap: 6 }}>
-                      <span className="eyebrow">Mit látunk</span>
+                      <span className="eyebrow">Összefoglaló</span>
                       <p className="small secondary" style={{ margin: 0, whiteSpace: 'pre-line' }}>{r.summary}</p>
                     </div>
                   )}
@@ -130,7 +158,7 @@ export default async function AdsPage({ previewId, m }: { previewId?: string; m?
             })}
             {updated && (
               <span className="tiny muted">
-                Utolsó frissítés: {new Date(updated).toLocaleDateString('hu-HU')}. A számok a hirdetési fiókokból származnak, és a hónap végéig változhatnak.
+                Utolsó frissítés: {new Date(updated).toLocaleDateString('hu-HU')}. A számok a hirdetési fiókból származnak, és a hónap végéig tovább nőnek.
               </span>
             )}
           </>

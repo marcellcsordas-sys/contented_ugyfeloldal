@@ -17,22 +17,24 @@ export function PlayIcon({ size = 14 }: { size?: number }) {
 export default function PostVisual({ post, large = false }: { post: PostWithMedia; large?: boolean }) {
   const label = `${post.content_type || (post.is_video ? 'Videó' : 'Kreatív')} ${post.format}`;
   const style: React.CSSProperties | undefined = large ? { aspectRatio: ratioOf(post.format) } : undefined;
+  // Videós posztnál lehet, hogy csak borítókép van feltöltve
+  const videoFile = post.is_video && /\.(mp4|mov|webm|m4v)$/i.test(post.visual_path ?? '');
 
   return (
     <div className={`visual ${large ? 'visual-large' : 'visual-card'} ${post.visual_url ? '' : 'placeholder'}`} style={style}>
-      {post.visual_url && post.is_video && (
+      {post.visual_url && videoFile && (
         large ? (
           <video src={post.visual_url} controls playsInline preload="metadata" />
         ) : (
           <video src={post.visual_url} muted playsInline preload="metadata" />
         )
       )}
-      {post.visual_url && !post.is_video && (
+      {post.visual_url && !videoFile && (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={post.visual_url} alt={post.visual_headline ?? `${post.platform} kreatív`} loading={large ? 'eager' : 'lazy'} />
       )}
       <span className="tag">{label}</span>
-      {post.is_video && !(large && post.visual_url) && (
+      {post.is_video && !(large && videoFile) && (
         <span className="play"><PlayIcon /></span>
       )}
       {!post.visual_url && (

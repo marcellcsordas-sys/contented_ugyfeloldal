@@ -162,8 +162,8 @@ export default async function ClientAdminPage({
                     <div className="field"><label>Kattintás</label><input name="clicks" className="input" inputMode="numeric" defaultValue={r?.clicks ?? ''} /></div>
                     <div className="field"><label>Aktív hirdetések</label><input name="active_ads" className="input" inputMode="numeric" defaultValue={r?.active_ads ?? ''} /></div>
                   </div>
-                  <div className="field"><label>Legjobb hirdetések (soronként: név | eredmény)</label><textarea name="top_ads" className="textarea" placeholder="STAL2 szögletes eresz videó | 42 ajánlatkérés" defaultValue={(r?.top_ads ?? []).map((a) => `${a.name} | ${a.value}`).join('\n')} /></div>
-                  <div className="field"><label>Mit látunk (rövid értékelés az ügyfélnek)</label><textarea name="summary" className="textarea" defaultValue={r?.summary ?? ''} /></div>
+                  <div className="field"><label>Hirdetések táblázata (soronként: név | eredmény | költés | megjelenés | elérés | aktív vagy lezárult)</label><textarea name="top_ads" className="textarea" style={{ minHeight: 140 }} placeholder="STAL2 szögletes eresz | 12 ajánlatkérés | 25000 | 8000 | 5200 | aktív" defaultValue={(r?.top_ads ?? []).map((a) => [a.name, a.result ?? a.value ?? '', a.spend ?? '', a.impressions ?? '', a.reach ?? '', a.status ?? 'aktív'].join(' | ')).join('\n')} /></div>
+                  <div className="field"><label>Összefoglaló az ügyfélnek (pozitív hangvétel)</label><textarea name="summary" className="textarea" defaultValue={r?.summary ?? ''} /></div>
                 </ActionForm>
               );
             })}

@@ -75,7 +75,18 @@ export type AdReport = {
   result_label: string;
   active_ads: number;
   summary: string | null;
-  top_ads: { name: string; value: string }[];
+  top_ads: AdRow[];
   source: string;
   updated_at: string;
+};
+
+// Egy hirdetés a riport táblázatában
+export type AdRow = {
+  name: string;
+  status?: 'aktív' | 'lezárult';
+  spend?: number;
+  result?: string; // pl. "23 új követő"
+  impressions?: number;
+  reach?: number;
+  value?: string; // régi formátum
 };
