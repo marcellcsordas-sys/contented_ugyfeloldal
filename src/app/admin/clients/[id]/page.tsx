@@ -146,24 +146,44 @@ export default async function ClientAdminPage({
 
             {(['meta', 'google'] as const).map((p) => {
               const r = adOf(p);
+              const hl = r?.highlight;
               return (
                 <ActionForm key={p} action={saveAdReport.bind(null, id, month, p)} submitLabel="Riport mentése" successText="Elmentve, az ügyfél látja.">
                   <div className="row between">
                     <span className="eyebrow">{p === 'meta' ? 'Meta' : 'Google'} hirdetési riport · {ml.full}</span>
                     <Link className="tiny muted" href={`${base}/preview/hirdetesek?m=${month}`}>Ügyfélnézet</Link>
                   </div>
+                  <span className="tiny muted">Pozitív hangvétel: az ügyfél ebből egy áttekinthető dashboardot lát. Üresen hagyott platform nem jelenik meg.</span>
                   <div className="form-grid">
-                    <div className="field"><label>Elköltött (Ft)</label><input name="spend" className="input" inputMode="numeric" defaultValue={r?.spend ?? ''} /></div>
-                    <div className="field"><label>Havi keret (Ft)</label><input name="budget" className="input" inputMode="numeric" defaultValue={r?.budget ?? ''} /></div>
-                    <div className="field"><label>Eredmény (db)</label><input name="results" className="input" inputMode="numeric" defaultValue={r?.results ?? ''} /></div>
-                    <div className="field"><label>Eredmény neve</label><input name="result_label" className="input" placeholder="Ajánlatkérés, kattintás, üzenet" defaultValue={r?.result_label ?? ''} /></div>
+                    <div className="field"><label>Időszak</label><input name="period_label" className="input" placeholder="november 1–30." defaultValue={r?.period_label ?? ''} /></div>
+                    <div className="field"><label>Teljes költés (Ft)</label><input name="spend" className="input" inputMode="numeric" defaultValue={r?.spend ?? ''} /></div>
+                    <div className="field"><label>Ajánlatkérés (db)</label><input name="leads" className="input" inputMode="numeric" defaultValue={r?.leads ?? ''} /></div>
+                    <div className="field"><label>Ajánlatkérő kampányok költése (Ft)</label><input name="leads_spend" className="input" inputMode="numeric" defaultValue={r?.leads_spend ?? ''} /></div>
+                    <div className="field"><label>Elért emberek</label><input name="reach" className="input" inputMode="numeric" defaultValue={r?.reach ?? ''} /></div>
                     <div className="field"><label>Megjelenés</label><input name="impressions" className="input" inputMode="numeric" defaultValue={r?.impressions ?? ''} /></div>
-                    <div className="field"><label>Elérés</label><input name="reach" className="input" inputMode="numeric" defaultValue={r?.reach ?? ''} /></div>
-                    <div className="field"><label>Kattintás</label><input name="clicks" className="input" inputMode="numeric" defaultValue={r?.clicks ?? ''} /></div>
+                    <div className="field"><label>Interakció</label><input name="engagements" className="input" inputMode="numeric" defaultValue={r?.engagements ?? ''} /></div>
+                    <div className="field"><label>Új követő</label><input name="new_followers" className="input" inputMode="numeric" defaultValue={r?.new_followers ?? ''} /></div>
                     <div className="field"><label>Aktív hirdetések</label><input name="active_ads" className="input" inputMode="numeric" defaultValue={r?.active_ads ?? ''} /></div>
                   </div>
-                  <div className="field"><label>Hirdetések táblázata (soronként: név | eredmény | költés | megjelenés | elérés | aktív vagy lezárult)</label><textarea name="top_ads" className="textarea" style={{ minHeight: 140 }} placeholder="STAL2 szögletes eresz | 12 ajánlatkérés | 25000 | 8000 | 5200 | aktív" defaultValue={(r?.top_ads ?? []).map((a) => [a.name, a.result ?? a.value ?? '', a.spend ?? '', a.impressions ?? '', a.reach ?? '', a.status ?? 'aktív'].join(' | ')).join('\n')} /></div>
-                  <div className="field"><label>Összefoglaló az ügyfélnek (pozitív hangvétel)</label><textarea name="summary" className="textarea" defaultValue={r?.summary ?? ''} /></div>
+                  <div className="field"><label>Keret elosztása (soronként: cél | költés | eredmény)</label><textarea name="breakdown" className="textarea" placeholder="Ajánlatkérés | 22189 | 1 ajánlatkérés" defaultValue={(r?.breakdown ?? []).map((b) => `${b.label} | ${b.spend} | ${b.result}`).join('\n')} /></div>
+                  <span className="eyebrow" style={{ marginTop: 6 }}>A hónap kedvence</span>
+                  <div className="form-grid">
+                    <div className="field"><label>Cím</label><input name="hl_title" className="input" defaultValue={hl?.title ?? ''} /></div>
+                    <div className="field"><label>Alcím</label><input name="hl_subtitle" className="input" defaultValue={hl?.subtitle ?? ''} /></div>
+                    <div className="field">
+                      <label>Kép (a hónap posztjaiból)</label>
+                      <select name="hl_image" className="select" defaultValue={hl?.image_path ?? ''}>
+                        <option value="">Nincs kép</option>
+                        {(posts ?? []).filter((x) => x.visual_path).map((x) => (
+                          <option key={x.id} value={x.visual_path!}>{formatPostDate(x.publish_date)} · {x.content_type}</option>
+                        ))}
+                        {hl?.image_path && !(posts ?? []).some((x) => x.visual_path === hl.image_path) && <option value={hl.image_path}>Korábbi kép</option>}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="field"><label>Számok (soronként: érték | címke)</label><textarea name="hl_stats" className="textarea" placeholder="6 158 | interakció" defaultValue={(hl?.stats ?? []).map((x) => `${x.value} | ${x.label}`).join('\n')} /></div>
+                  <div className="field"><label>Egy mondat róla</label><input name="hl_note" className="input" defaultValue={hl?.note ?? ''} /></div>
+                  <div className="field"><label>A hónap röviden (soronként egy eredmény)</label><textarea name="summary" className="textarea" style={{ minHeight: 120 }} defaultValue={r?.summary ?? ''} /></div>
                 </ActionForm>
               );
             })}

@@ -77,6 +77,13 @@ export type AdReport = {
   summary: string | null;
   top_ads: AdRow[];
   source: string;
+  period_label: string | null;
+  leads: number;
+  leads_spend: number;
+  engagements: number;
+  new_followers: number;
+  highlight: AdHighlight | null;
+  breakdown: { label: string; spend: number; result: string }[];
   updated_at: string;
 };
 
@@ -89,4 +96,12 @@ export type AdRow = {
   impressions?: number;
   reach?: number;
   value?: string; // régi formátum
+};
+
+export type AdHighlight = {
+  title: string;
+  subtitle?: string;
+  image_path?: string;
+  stats: { label: string; value: string }[];
+  note?: string;
 };

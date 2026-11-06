@@ -178,38 +178,40 @@ export async function deletePost(clientId: string, postId: string): Promise<Resu
 
 export async function saveAdReport(clientId: string, month: string, platform: 'meta' | 'google', fd: FormData): Promise<Result> {
   const { supabase } = await requireAdmin();
-  // Soronként: név | eredmény | költés | megjelenés | elérés | lezárult
   const num = (v?: string) => {
     const x = parseInt((v ?? '').replace(/\D/g, ''), 10);
-    return Number.isFinite(x) ? x : undefined;
+    return Number.isFinite(x) ? x : 0;
   };
-  const topAds = lines(fd, 'top_ads').map((l) => {
-    const [name, result, spend, impressions, reach, status] = l.split('|').map((x) => x.trim());
-    return {
-      name,
-      result: result || undefined,
-      spend: num(spend),
-      impressions: num(impressions),
-      reach: num(reach),
-      status: status?.toLowerCase().startsWith('lez') ? ('lezárult' as const) : ('aktív' as const),
-    };
-  }).filter((x) => x.name);
-  const budget = str(fd, 'budget');
-  const reach = str(fd, 'reach');
+  // Soronként: cél | költés | eredmény
+  const breakdown = lines(fd, 'breakdown').map((l) => {
+    const [label, spend, result] = l.split('|').map((x) => x.trim());
+    return { label, spend: num(spend), result: result ?? '' };
+  }).filter((b) => b.label);
+  // Soronként: érték | címke
+  const stats = lines(fd, 'hl_stats').map((l) => {
+    const [value, label] = l.split('|').map((x) => x.trim());
+    return { value, label: label ?? '' };
+  }).filter((x) => x.value);
+  const hlTitle = str(fd, 'hl_title');
+  const highlight = hlTitle
+    ? { title: hlTitle, subtitle: str(fd, 'hl_subtitle') || undefined, image_path: str(fd, 'hl_image') || undefined, stats, note: str(fd, 'hl_note') || undefined }
+    : null;
   const { error } = await supabase.from('ad_reports').upsert({
     client_id: clientId,
     month: `${month}-01`,
     platform,
+    period_label: str(fd, 'period_label') || null,
     spend: int(fd, 'spend', 0),
-    budget: budget ? int(fd, 'budget', 0) : null,
+    reach: int(fd, 'reach', 0),
     impressions: int(fd, 'impressions', 0),
-    reach: reach ? int(fd, 'reach', 0) : null,
-    clicks: int(fd, 'clicks', 0),
-    results: int(fd, 'results', 0),
-    result_label: str(fd, 'result_label') || 'Eredmény',
+    leads: int(fd, 'leads', 0),
+    leads_spend: int(fd, 'leads_spend', 0),
+    engagements: int(fd, 'engagements', 0),
+    new_followers: int(fd, 'new_followers', 0),
     active_ads: int(fd, 'active_ads', 0),
     summary: str(fd, 'summary') || null,
-    top_ads: topAds,
+    breakdown,
+    highlight,
     source: 'kézi',
     updated_at: new Date().toISOString(),
   }, { onConflict: 'client_id,month,platform' });
