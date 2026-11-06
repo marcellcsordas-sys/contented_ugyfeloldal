@@ -97,7 +97,7 @@ export default async function PackagePage({ previewId }: { previewId?: string; m
                 <p className="small muted" style={{ margin: 0 }}>
                   Bővítenéd a csomagot, vagy új ötleted van? Beszéljük át egy konzultáción.
                 </p>
-                <a className="btn btn-yellow" href="https://contented.hu" target="_blank" rel="noreferrer">
+                <a className="btn btn-yellow" href="https://www.contented.hu/ai-marketing-konzult%C3%A1ci%C3%B3" target="_blank" rel="noreferrer">
                   AI Marketing konzultáció
                 </a>
               </div>
