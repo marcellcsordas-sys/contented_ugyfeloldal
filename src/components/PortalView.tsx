@@ -172,7 +172,7 @@ export default function PortalView(props: Props) {
           {props.brief && (() => {
             const bm = monthLabel(props.brief.month);
             const dl = briefDeadline(props.brief.month);
-            const dlText = `${dl.getMonth() + 1}. ${dl.getDate()}.`;
+            const dlText = `${monthLabel(`${dl.getFullYear()}-${String(dl.getMonth() + 1).padStart(2, '0')}`).name} ${dl.getDate()}.`;
             const done = props.brief.state === 'done';
             return (
               <Link href={`${basePath}/brief`} className={`card stack brief-cta ${done ? '' : 'card-glow'}`} style={{ textDecoration: 'none' }}>
