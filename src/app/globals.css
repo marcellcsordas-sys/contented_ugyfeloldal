@@ -344,7 +344,8 @@ button, input, textarea, select { font-family: inherit; font-size: inherit; }
   .ts-actions { grid-area: actions; }
   .row-actions { justify-content: stretch !important; }
   .row-select { flex: 1; width: auto; }
-  .table-stats tr { grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-areas: "main main main main" "a b c d" "actions actions actions actions"; }
+  .table-stats tr { grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-areas: "main main main main" "a b c d" "brief brief brief brief" "actions actions actions actions"; }
+  .table-stats .ts-brief { grid-area: brief; }
   .table-stats .ts-stat { font-size: 18px; font-weight: 600; }
   .table-stats .ts-stat::before { content: attr(data-label); display: block; font-size: 11px; font-weight: 400; color: var(--ink-muted); }
   .table-stats .ts-actions { text-align: left !important; }

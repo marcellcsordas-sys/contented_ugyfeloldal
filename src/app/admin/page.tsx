@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { requireAdmin } from '@/lib/session';
-import { currentMonthKey, formatShortDate, monthRange } from '@/lib/format';
+import { currentMonthKey, formatShortDate, monthLabel, monthRange, shiftMonth } from '@/lib/format';
+import { briefDeadline } from '@/lib/brief';
 import TopBar from '@/components/TopBar';
 import { createClientAction } from './actions';
 import HandledButton from '@/components/admin/HandledButton';
@@ -14,12 +15,21 @@ export default async function AdminHome() {
   const month = currentMonthKey();
   const { start, end } = monthRange(month);
 
-  const [{ data: clients }, { data: posts }, { data: reqs }] = await Promise.all([
+  const briefMonth = shiftMonth(month, 1);
+  const bml = monthLabel(briefMonth);
+  const dl = briefDeadline(briefMonth);
+  const dlText = `${monthLabel(`${dl.getFullYear()}-${String(dl.getMonth() + 1).padStart(2, '0')}`).name} ${dl.getDate()}.`;
+
+  const [{ data: clients }, { data: posts }, { data: reqs }, { data: briefs }] = await Promise.all([
     supabase.from('clients').select('id, name, contact_name').order('name').returns<Row[]>(),
     supabase.from('posts').select('client_id, status').gte('publish_date', start).lt('publish_date', end).returns<PostRow[]>(),
     supabase.from('offer_requests').select('id, created_at, client_id, offers(title)').eq('handled', false)
       .order('created_at', { ascending: false }).returns<Req[]>(),
+    supabase.from('monthly_inputs').select('client_id, submitted, submitted_at').eq('month', `${briefMonth}-01`)
+      .returns<{ client_id: string; submitted: boolean; submitted_at: string | null }[]>(),
   ]);
+  const briefOf = (id: string) => (briefs ?? []).find((b) => b.client_id === id);
+  const doneCount = (clients ?? []).filter((c) => briefOf(c.id)?.submitted).length;
 
   const stat = (id: string, s?: string) => (posts ?? []).filter((p) => p.client_id === id && (!s || p.status === s)).length;
   const nameOf = (id: string) => clients?.find((c) => c.id === id)?.name ?? '';
@@ -36,6 +46,9 @@ export default async function AdminHome() {
                 {clients?.length ?? 0} ügyfél.
                 <span className="second">{(posts ?? []).filter((p) => p.status === 'var').length} tartalom vár jóváhagyásra.</span>
               </h1>
+              <span className="small muted">
+                {bml.name.charAt(0).toUpperCase() + bml.name.slice(1)}i social media tervező: {doneCount} / {clients?.length ?? 0} kitöltve. Határidő: {dlText}
+              </span>
             </div>
 
             {(clients ?? []).length === 0 ? (
@@ -44,7 +57,7 @@ export default async function AdminHome() {
               <div className="card scroll-x" style={{ padding: 6 }}>
                 <table className="table table-stack table-stats">
                   <thead>
-                    <tr><th>Ügyfél</th><th>Összes</th><th>Vár</th><th>Módosítás</th><th>Elfogadva</th><th></th></tr>
+                    <tr><th>Ügyfél</th><th>Összes</th><th>Vár</th><th>Módosítás</th><th>Elfogadva</th><th>Tervező · {bml.name}</th><th></th></tr>
                   </thead>
                   <tbody>
                     {(clients ?? []).map((c) => (
@@ -57,6 +70,20 @@ export default async function AdminHome() {
                         <td className="ts-stat" data-label="Vár">{stat(c.id, 'var')}</td>
                         <td className="ts-stat" data-label="Módosítás">{stat(c.id, 'mod')}</td>
                         <td className="ts-stat" data-label="Elfogadva">{stat(c.id, 'ok')}</td>
+                        <td className="ts-brief">
+                          {(() => {
+                            const b = briefOf(c.id);
+                            const cls = b?.submitted ? 'pill-ok' : b ? 'pill-mod' : 'pill-keszul';
+                            const text = b?.submitted
+                              ? `Kitöltve${b.submitted_at ? ` · ${formatShortDate(b.submitted_at)}` : ''}`
+                              : b ? 'Elkezdte' : 'Nincs kitöltve';
+                            return (
+                              <Link href={`/admin/clients/${c.id}?m=${briefMonth}`} className={`pill ${cls}`} style={{ textDecoration: 'none' }}>
+                                {text}
+                              </Link>
+                            );
+                          })()}
+                        </td>
                         <td className="ts-actions" style={{ textAlign: 'right' }}>
                           <Link className="btn btn-ghost btn-sm" href={`/admin/clients/${c.id}`}>Megnyitom</Link>
                         </td>
