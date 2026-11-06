@@ -3,7 +3,9 @@
 import Link from 'next/link';
 import { useMemo, useState, useTransition } from 'react';
 import type { Offer, Package, PostStatus, PostWithMedia } from '@/lib/types';
-import { STATUS, STATUS_ORDER, capitalize, formatFt, formatPostDate, monthLabel, shiftMonth } from '@/lib/format';
+import { STATUS, STATUS_ORDER, capitalize, formatPostDate, monthIn, monthLabel, shiftMonth } from '@/lib/format';
+import { usageRows } from '@/lib/usage';
+import { briefDeadline } from '@/lib/brief';
 import { approveMonth, requestOffer } from '@/app/portal/actions';
 import PostVisual from './PostVisual';
 import PostDetail from './PostDetail';
@@ -20,6 +22,7 @@ type Props = {
   posts: PostWithMedia[];
   mode: 'client' | 'preview';
   basePath?: string;
+  brief?: { month: string; state: 'none' | 'draft' | 'done' };
 };
 
 function CommentIcon() {
@@ -60,13 +63,7 @@ export default function PortalView(props: Props) {
   const waiting = counts.var;
   const ml = monthLabel(month);
 
-  const usage = pkg
-    ? [
-        { label: 'Poszt', used: posts.filter((p) => !p.is_video).length, total: pkg.posts_quota },
-        { label: 'Videó', used: posts.filter((p) => p.is_video).length, total: pkg.videos_quota },
-        { label: 'Módosítási kör', used: posts.reduce((a, p) => a + p.revision_count, 0), total: pkg.revisions_quota },
-      ].filter((u) => u.total > 0)
-    : [];
+  const usage = usageRows(pkg, posts);
 
   function onApproveAll() {
     setError(null);
@@ -170,47 +167,54 @@ export default function PortalView(props: Props) {
           )}
         </section>
 
-        <aside className="split-side" aria-label="Csomag és feltételek">
-          {pkg ? (
-            <div className="card stack" style={{ gap: 18 }}>
-              <span className="eyebrow">Aktuális csomagod</span>
-              <div className="stack" style={{ gap: 6 }}>
-                <h2 className="h2">{pkg.name}</h2>
-                {pkg.since_label && <span className="muted">{pkg.since_label}</span>}
-              </div>
-              <div className="stack" style={{ gap: 2 }}>
-                <span className="big-number">{formatFt(pkg.monthly_fee)}</span>
-                <span className="small muted">{pkg.fee_note}</span>
-              </div>
-              {pkg.includes.length > 0 && (
-                <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {pkg.includes.map((t, i) => (
-                    <li key={i} className="row" style={{ alignItems: 'flex-start', flexWrap: 'nowrap', fontSize: 15, lineHeight: '22px' }}>
-                      <CheckIcon color="#0055fe" size={20} />
-                      {t}
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <hr className="divider" />
-              <div className="stack">
+        <aside className="split-side" aria-label="A hónap összefoglalója">
+          {props.brief && (() => {
+            const bm = monthLabel(props.brief.month);
+            const dl = briefDeadline(props.brief.month);
+            const dlText = `${dl.getMonth() + 1}. ${dl.getDate()}.`;
+            const done = props.brief.state === 'done';
+            return (
+              <Link href={`${basePath}/brief`} className={`card stack brief-cta ${done ? '' : 'card-glow'}`} style={{ textDecoration: 'none' }}>
+                <span className="eyebrow">Havi tervező · {bm.name}</span>
+                <h3 className="h3">
+                  {done ? `A ${bm.name}i tervet megkaptuk.` : `Mondd el, mi legyen ${monthIn(bm.name)}.`}
+                </h3>
+                <span className="small muted">
+                  {done
+                    ? 'Ha még eszedbe jut valami, a határidőig módosíthatod.'
+                    : props.brief.state === 'draft'
+                      ? `Elkezdted, a mentett válaszaid megvannak. Határidő: ${dlText}`
+                      : `5 perc, 8 kérdés. Ebből készül a ${bm.name}i naptár. Határidő: ${dlText}`}
+                </span>
+                <span className={`btn ${done ? 'btn-ghost' : 'btn-blue'}`} style={{ alignSelf: 'flex-start' }}>
+                  {done ? 'Megnézem' : props.brief.state === 'draft' ? 'Folytatom' : 'Kitöltöm'}
+                </span>
+              </Link>
+            );
+          })()}
+
+          {pkg && usage.length > 0 && (
+            <div className="card stack">
+              <div className="row between">
                 <span className="eyebrow">Felhasználás · {ml.name}</span>
-                {usage.map((u) => {
-                  const pct = u.total > 0 ? Math.min(100, Math.round((u.used / u.total) * 100)) : 0;
-                  return (
-                    <div key={u.label} className="stack" style={{ gap: 6 }}>
-                      <div className="row between small">
-                        <span className="secondary">{u.label}</span>
-                        <span style={{ fontWeight: 600 }}>{u.used} / {u.total}</span>
-                      </div>
-                      <div className="bar"><span className={pct >= 100 ? 'full' : ''} style={{ width: `${pct}%` }} /></div>
-                    </div>
-                  );
-                })}
+                <Link href={`${basePath}/csomag`} className="tiny muted">Csomagom</Link>
               </div>
+              {usage.map((u) => {
+                const pct = u.total > 0 ? Math.min(100, Math.round((u.used / u.total) * 100)) : 0;
+                return (
+                  <div key={u.label} className="stack" style={{ gap: 6 }}>
+                    <div className="row between small">
+                      <span className="secondary">{u.label}</span>
+                      <span style={{ fontWeight: 600 }}>{u.used} / {u.total}</span>
+                    </div>
+                    <div className="bar"><span className={pct >= 100 ? 'full' : ''} style={{ width: `${pct}%` }} /></div>
+                  </div>
+                );
+              })}
+              <span className="tiny muted">
+                Havonta 1 módosítási kör jár: ebben az összes posztra egyszerre jelezheted, mit változtassunk.
+              </span>
             </div>
-          ) : (
-            <div className="card muted">A csomag adatai hamarosan itt lesznek.</div>
           )}
 
           {offer && (
@@ -226,19 +230,6 @@ export default function PortalView(props: Props) {
               ) : (
                 <span className="tiny muted">Előnézet: az ügyfél itt választhatja ki.</span>
               )}
-            </div>
-          )}
-
-          {pkg && (
-            <div className="card stack">
-              <span className="eyebrow">Együttműködési feltételek</span>
-              <ol className="small muted" style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {pkg.terms.map((t, i) => <li key={i}>{t}</li>)}
-              </ol>
-              {pkg.contract_note && <span className="small secondary">{pkg.contract_note}</span>}
-              <a className="btn btn-yellow" href="https://contented.hu" target="_blank" rel="noreferrer">
-                AI Marketing konzultáció
-              </a>
             </div>
           )}
         </aside>

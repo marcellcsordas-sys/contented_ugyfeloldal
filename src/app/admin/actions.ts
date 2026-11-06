@@ -175,3 +175,44 @@ export async function deletePost(clientId: string, postId: string): Promise<Resu
   revalidatePath('/portal');
   return { ok: true };
 }
+
+export async function saveAdReport(clientId: string, month: string, platform: 'meta' | 'google', fd: FormData): Promise<Result> {
+  const { supabase } = await requireAdmin();
+  const topAds = lines(fd, 'top_ads').map((l) => {
+    const [name, ...rest] = l.split('|');
+    return { name: name.trim(), value: rest.join('|').trim() };
+  }).filter((x) => x.name);
+  const budget = str(fd, 'budget');
+  const reach = str(fd, 'reach');
+  const { error } = await supabase.from('ad_reports').upsert({
+    client_id: clientId,
+    month: `${month}-01`,
+    platform,
+    spend: int(fd, 'spend', 0),
+    budget: budget ? int(fd, 'budget', 0) : null,
+    impressions: int(fd, 'impressions', 0),
+    reach: reach ? int(fd, 'reach', 0) : null,
+    clicks: int(fd, 'clicks', 0),
+    results: int(fd, 'results', 0),
+    result_label: str(fd, 'result_label') || 'Eredmény',
+    active_ads: int(fd, 'active_ads', 0),
+    summary: str(fd, 'summary') || null,
+    top_ads: topAds,
+    source: 'kézi',
+    updated_at: new Date().toISOString(),
+  }, { onConflict: 'client_id,month,platform' });
+  if (error) return { ok: false, error: error.message };
+  revalidatePath(`/admin/clients/${clientId}`);
+  revalidatePath('/portal', 'layout');
+  return { ok: true };
+}
+
+export async function deleteAdReport(clientId: string, month: string, platform: 'meta' | 'google'): Promise<Result> {
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase.from('ad_reports').delete()
+    .eq('client_id', clientId).eq('month', `${month}-01`).eq('platform', platform);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath(`/admin/clients/${clientId}`);
+  revalidatePath('/portal', 'layout');
+  return { ok: true };
+}

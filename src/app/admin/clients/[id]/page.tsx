@@ -1,13 +1,15 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireAdmin } from '@/lib/session';
-import { STATUS, formatPostDate, monthLabel, normalizeMonth, shiftMonth, monthRange } from '@/lib/format';
+import { STATUS, formatPostDate, formatShortDate, monthLabel, normalizeMonth, shiftMonth, monthRange } from '@/lib/format';
 import type { Client, Offer, Package, Post } from '@/lib/types';
 import TopBar from '@/components/TopBar';
 import ActionForm from '@/components/admin/ActionForm';
 import PostRowActions from '@/components/admin/PostRowActions';
 import OfferOff from '@/components/admin/OfferOff';
-import { inviteUser, saveOffer, savePackage } from '../../actions';
+import { inviteUser, saveAdReport, saveOffer, savePackage } from '../../actions';
+import { goalText, type MonthlyInput } from '@/lib/brief';
+import type { AdReport } from '@/lib/types';
 
 type Member = { id: string; full_name: string | null };
 
@@ -24,7 +26,7 @@ export default async function ClientAdminPage({
   const { start, end } = monthRange(month);
   const { supabase, profile } = await requireAdmin();
 
-  const [{ data: client }, { data: pkg }, { data: offer }, { data: posts }, { data: members }] = await Promise.all([
+  const [{ data: client }, { data: pkg }, { data: offer }, { data: posts }, { data: members }, { data: brief }, { data: ads }] = await Promise.all([
     supabase.from('clients').select('*').eq('id', id).maybeSingle<Client>(),
     supabase.from('packages').select('*').eq('client_id', id).maybeSingle<Package>(),
     supabase.from('offers').select('*').eq('client_id', id).eq('active', true).order('created_at', { ascending: false })
@@ -32,7 +34,10 @@ export default async function ClientAdminPage({
     supabase.from('posts').select('*').eq('client_id', id).gte('publish_date', start).lt('publish_date', end)
       .order('publish_date').order('number').returns<Post[]>(),
     supabase.from('profiles').select('id, full_name').eq('client_id', id).returns<Member[]>(),
+    supabase.from('monthly_inputs').select('*').eq('client_id', id).eq('month', `${month}-01`).maybeSingle<MonthlyInput>(),
+    supabase.from('ad_reports').select('*').eq('client_id', id).eq('month', `${month}-01`).returns<AdReport[]>(),
   ]);
+  const adOf = (p: 'meta' | 'google') => (ads ?? []).find((r) => r.platform === p);
   if (!client) notFound();
 
   const ml = monthLabel(month);
@@ -109,6 +114,59 @@ export default async function ClientAdminPage({
               </div>
               <div className="field"><label htmlFor="o-sub">Indoklás</label><textarea id="o-sub" name="subtitle" className="textarea" placeholder="Mind a 4 novemberi videód elfogyott..." /></div>
             </ActionForm>
+
+            <div className="card stack">
+              <div className="row between">
+                <span className="eyebrow">Havi tervező · {ml.full}</span>
+                <Link className="tiny muted" href={`${base}/preview/brief?m=${month}`}>Megnyitás ügyfélnézetben</Link>
+              </div>
+              {!brief ? (
+                <span className="small muted">Erre a hónapra még nem töltötték ki.</span>
+              ) : (
+                <>
+                  <span className={`pill ${brief.submitted ? 'pill-ok' : 'pill-keszul'}`} style={{ alignSelf: 'flex-start' }}>
+                    {brief.submitted ? `Elküldve${brief.submitted_by_name ? ` · ${brief.submitted_by_name}` : ''}${brief.submitted_at ? ` · ${formatShortDate(brief.submitted_at)}` : ''}` : 'Piszkozat, még nincs elküldve'}
+                  </span>
+                  <dl className="brief-dl">
+                    <dt>Cél</dt><dd>{goalText(brief.answers) || '–'}</dd>
+                    <dt>Kiemelés</dt><dd>{brief.answers.highlight || '–'}</dd>
+                    <dt>Dátumok</dt><dd>{brief.answers.no_dates ? 'Nincs' : (brief.answers.dates ?? []).map((d) => `${d.date.slice(5).replace('-', '.')}. ${d.label}`).join('\n') || '–'}</dd>
+                    <dt>Részvétel</dt><dd>{(brief.answers.participation ?? []).join('\n') || '–'}</dd>
+                    <dt>Mi újság</dt><dd>{brief.answers.news || '–'}</dd>
+                    <dt>Visszajelzés</dt><dd>{[
+                      Object.values(brief.answers.feedback_posts ?? {}).filter((v) => v === 'up').length ? `👍 ${Object.values(brief.answers.feedback_posts ?? {}).filter((v) => v === 'up').length} poszt` : '',
+                      Object.values(brief.answers.feedback_posts ?? {}).filter((v) => v === 'down').length ? `👎 ${Object.values(brief.answers.feedback_posts ?? {}).filter((v) => v === 'down').length} poszt` : '',
+                      brief.answers.feedback ?? '',
+                    ].filter(Boolean).join('\n') || '–'}</dd>
+                    <dt>Anyagok</dt><dd>{brief.answers.assets ? <a href={brief.answers.assets} target="_blank" rel="noreferrer">{brief.answers.assets}</a> : '–'}</dd>
+                  </dl>
+                </>
+              )}
+            </div>
+
+            {(['meta', 'google'] as const).map((p) => {
+              const r = adOf(p);
+              return (
+                <ActionForm key={p} action={saveAdReport.bind(null, id, month, p)} submitLabel="Riport mentése" successText="Elmentve, az ügyfél látja.">
+                  <div className="row between">
+                    <span className="eyebrow">{p === 'meta' ? 'Meta' : 'Google'} hirdetési riport · {ml.full}</span>
+                    <Link className="tiny muted" href={`${base}/preview/hirdetesek?m=${month}`}>Ügyfélnézet</Link>
+                  </div>
+                  <div className="form-grid">
+                    <div className="field"><label>Elköltött (Ft)</label><input name="spend" className="input" inputMode="numeric" defaultValue={r?.spend ?? ''} /></div>
+                    <div className="field"><label>Havi keret (Ft)</label><input name="budget" className="input" inputMode="numeric" defaultValue={r?.budget ?? ''} /></div>
+                    <div className="field"><label>Eredmény (db)</label><input name="results" className="input" inputMode="numeric" defaultValue={r?.results ?? ''} /></div>
+                    <div className="field"><label>Eredmény neve</label><input name="result_label" className="input" placeholder="Ajánlatkérés, kattintás, üzenet" defaultValue={r?.result_label ?? ''} /></div>
+                    <div className="field"><label>Megjelenés</label><input name="impressions" className="input" inputMode="numeric" defaultValue={r?.impressions ?? ''} /></div>
+                    <div className="field"><label>Elérés</label><input name="reach" className="input" inputMode="numeric" defaultValue={r?.reach ?? ''} /></div>
+                    <div className="field"><label>Kattintás</label><input name="clicks" className="input" inputMode="numeric" defaultValue={r?.clicks ?? ''} /></div>
+                    <div className="field"><label>Aktív hirdetések</label><input name="active_ads" className="input" inputMode="numeric" defaultValue={r?.active_ads ?? ''} /></div>
+                  </div>
+                  <div className="field"><label>Legjobb hirdetések (soronként: név | eredmény)</label><textarea name="top_ads" className="textarea" placeholder="STAL2 szögletes eresz videó | 42 ajánlatkérés" defaultValue={(r?.top_ads ?? []).map((a) => `${a.name} | ${a.value}`).join('\n')} /></div>
+                  <div className="field"><label>Mit látunk (rövid értékelés az ügyfélnek)</label><textarea name="summary" className="textarea" defaultValue={r?.summary ?? ''} /></div>
+                </ActionForm>
+              );
+            })}
           </section>
 
           <aside className="split-side">
@@ -120,7 +178,7 @@ export default async function ClientAdminPage({
                 <div className="field"><label htmlFor="p-note">Díj megjegyzés</label><input id="p-note" name="fee_note" className="input" defaultValue={pkg?.fee_note ?? ''} /></div>
                 <div className="field"><label htmlFor="p-posts">Poszt / hó</label><input id="p-posts" name="posts_quota" className="input" inputMode="numeric" defaultValue={pkg?.posts_quota ?? 0} /></div>
                 <div className="field"><label htmlFor="p-videos">Videó / hó</label><input id="p-videos" name="videos_quota" className="input" inputMode="numeric" defaultValue={pkg?.videos_quota ?? 0} /></div>
-                <div className="field"><label htmlFor="p-rev">Módosítási kör / hó</label><input id="p-rev" name="revisions_quota" className="input" inputMode="numeric" defaultValue={pkg?.revisions_quota ?? 0} /></div>
+                <div className="field"><label htmlFor="p-rev">Módosítási kör / hó (havi kör)</label><input id="p-rev" name="revisions_quota" className="input" inputMode="numeric" defaultValue={pkg?.revisions_quota ?? 0} /></div>
                 <div className="field"><label htmlFor="p-since">Mióta</label><input id="p-since" name="since_label" className="input" placeholder="2025. március óta" defaultValue={pkg?.since_label ?? ''} /></div>
               </div>
               <div className="field"><label htmlFor="p-inc">Mit tartalmaz (soronként egy)</label><textarea id="p-inc" name="includes" className="textarea" defaultValue={(pkg?.includes ?? []).join('\n')} /></div>

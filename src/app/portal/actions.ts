@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { missingRequired, type BriefAnswers } from '@/lib/brief';
 
 type Result = { ok: true } | { ok: false; error: string };
 
@@ -46,5 +47,40 @@ export async function requestOffer(offerId: string, clientId: string): Promise<R
     .insert({ offer_id: offerId, client_id: clientId, requested_by: user.id });
   if (error) return { ok: false, error: error.message };
   revalidatePath('/portal');
+  return { ok: true };
+}
+
+// Havi tervező: piszkozat mentése (submit=false) vagy beküldés (submit=true).
+export async function saveBrief(
+  clientId: string,
+  month: string,
+  answers: BriefAnswers,
+  submit: boolean
+): Promise<Result> {
+  if (!/^\d{4}-\d{2}$/.test(month)) return { ok: false, error: 'Hibás hónap.' };
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: 'Nincs belépve.' };
+  if (submit) {
+    const miss = missingRequired(answers);
+    if (miss.length) return { ok: false, error: `Még hiányzik: ${miss.join(', ')}.` };
+  }
+  const { data: me } = await supabase.from('profiles').select('full_name').eq('id', user.id).single();
+  const monthDate = `${month}-01`;
+  const now = new Date().toISOString();
+  const extra = submit
+    ? { submitted: true, submitted_by: user.id, submitted_by_name: me?.full_name ?? null, submitted_at: now }
+    : {};
+
+  const { data: existing } = await supabase
+    .from('monthly_inputs').select('id').eq('client_id', clientId).eq('month', monthDate).maybeSingle();
+  const { error } = existing
+    ? await supabase.from('monthly_inputs').update({ answers, updated_at: now, ...extra }).eq('id', existing.id)
+    : await supabase.from('monthly_inputs').insert({ client_id: clientId, month: monthDate, answers, updated_at: now, ...extra });
+  if (error) return { ok: false, error: error.message };
+  if (submit) {
+    revalidatePath('/portal', 'layout');
+    revalidatePath('/admin', 'layout');
+  }
   return { ok: true };
 }

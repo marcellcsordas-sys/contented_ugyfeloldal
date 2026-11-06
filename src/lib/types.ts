@@ -60,3 +60,22 @@ export type Comment = {
 };
 
 export type PostWithMedia = Post & { visual_url: string | null; comments: Comment[] };
+
+export type AdReport = {
+  id: string;
+  client_id: string;
+  month: string;
+  platform: 'meta' | 'google';
+  spend: number;
+  budget: number | null;
+  impressions: number;
+  reach: number | null;
+  clicks: number;
+  results: number;
+  result_label: string;
+  active_ads: number;
+  summary: string | null;
+  top_ads: { name: string; value: string }[];
+  source: string;
+  updated_at: string;
+};
