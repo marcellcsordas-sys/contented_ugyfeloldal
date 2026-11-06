@@ -86,6 +86,8 @@ export type AdReport = {
   new_followers: number;
   highlight: AdHighlight | null;
   breakdown: { label: string; spend: number; result: string }[];
+  intro: string | null;
+  items: AdItem[];
   updated_at: string;
 };
 
@@ -98,6 +100,17 @@ export type AdRow = {
   impressions?: number;
   reach?: number;
   value?: string; // régi formátum
+};
+
+// Egy hirdetés (Meta) vagy kampány (Google) a részletes listában
+export type AdItem = {
+  name: string; // ügyfélbarát név
+  goal: string; // pl. "Állásjelentkezés", "Keresési hirdetés"
+  spend: number;
+  result: string; // pl. "78 állásjelentkező"
+  cost?: string; // pl. "178 Ft / jelentkező"
+  extra?: string; // pl. "13 479 megjelenés · 9,2% átkattintás"
+  star?: boolean;
 };
 
 export type AdHighlight = {

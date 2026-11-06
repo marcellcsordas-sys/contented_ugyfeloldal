@@ -35,7 +35,9 @@ export default async function AdsPage({ previewId, m }: { previewId?: string; m?
     .eq('month', `${month}-01`)
     .order('platform')
     .returns<AdReport[]>();
-  const reports = data ?? [];
+  const reports = [...(data ?? [])].sort((a, b) => (a.platform === b.platform ? 0 : a.platform === 'meta' ? -1 : 1));
+  const intro = reports.find((r) => r.intro)?.intro;
+  const PNAME = { meta: 'Facebook és Instagram', google: 'Google' } as const;
 
   const sum = (f: (r: AdReport) => number) => reports.reduce((a, r) => a + f(r), 0);
   const spend = sum((r) => r.spend);
@@ -48,14 +50,14 @@ export default async function AdsPage({ previewId, m }: { previewId?: string; m?
   const active = sum((r) => r.active_ads);
   const clicks = sum((r) => r.clicks);
   const leadLabel = reports.find((r) => r.leads > 0 && r.result_label && r.result_label !== 'Eredmény')?.result_label ?? 'Ajánlatkérés';
-  const lower = leadLabel.charAt(0).toLowerCase() + leadLabel.slice(1);
+  const lower = leadLabel.split(' (')[0].toLowerCase();
   const period = reports.find((r) => r.period_label)?.period_label;
   const updated = reports.map((r) => r.updated_at).sort().at(-1);
   const highlight = reports.find((r) => r.highlight)?.highlight ?? null;
   const breakdown = reports.flatMap((r) => r.breakdown ?? []);
   const bdTotal = breakdown.reduce((a, b) => a + b.spend, 0);
   const summaryLines = reports.flatMap((r) => (r.summary ?? '').split('\n').map((l) => l.trim()).filter(Boolean));
-  const platforms = reports.map((r) => (r.platform === 'meta' ? 'Facebook és Instagram' : 'Google')).join(', ');
+  const platforms = reports.map((r) => PNAME[r.platform]).join(', ');
 
   const urls = highlight?.image_path ? await signPaths(supabase, [highlight.image_path]) : new Map<string, string>();
   const hlImg = highlight?.image_path ? urls.get(highlight.image_path) : undefined;
@@ -90,6 +92,8 @@ export default async function AdsPage({ previewId, m }: { previewId?: string; m?
             </div>
           )}
         </div>
+
+        {intro && <p className="ads-intro">{intro}</p>}
 
         {reports.length === 0 ? (
           <div className="empty">
@@ -178,6 +182,77 @@ export default async function AdsPage({ previewId, m }: { previewId?: string; m?
                 )}
               </div>
             </div>
+
+            {reports.length > 1 && (
+              <div className="platform-grid">
+                {reports.map((r) => {
+                  const lbl = r.result_label && r.result_label !== 'Eredmény' ? r.result_label.split(' (')[0].toLowerCase() : 'konverzió';
+                  return (
+                    <div key={r.id} className="card stack platform-card" style={{ gap: 14 }}>
+                      <div className="row between">
+                        <span className="row" style={{ gap: 8 }}>
+                          <span className={`pf-dot pf-${r.platform}`} />
+                          <span className="eyebrow" style={{ margin: 0 }}>{PNAME[r.platform]}</span>
+                        </span>
+                        <span className="small" style={{ fontWeight: 600 }}>{formatFt(r.spend)}</span>
+                      </div>
+                      <div className="pf-stats">
+                        {r.leads > 0 ? (
+                          <div><b>{n(r.leads)}</b><span>{lbl}</span></div>
+                        ) : r.results > 0 ? (
+                          <div><b>{n(r.results)}</b><span>{lbl}</span></div>
+                        ) : (
+                          <div><b>{n(r.reach ?? 0)}</b><span>elért ember</span></div>
+                        )}
+                        <div><b>{n(r.clicks)}</b><span>kattintás</span></div>
+                        <div><b>{n(r.impressions)}</b><span>megjelenés</span></div>
+                        {r.clicks > 0 && <div><b>{formatFt(Math.round(r.spend / r.clicks))}</b><span>/ kattintás</span></div>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {reports.some((r) => (r.items ?? []).length > 0) && (
+              <div className="stack" style={{ gap: 14 }}>
+                <div className="stack" style={{ gap: 4 }}>
+                  <span className="eyebrow">Hirdetéseid részletesen</span>
+                  <span className="small muted">Melyik hirdetés mire fut, mennyi keretet kapott, és mit hozott eddig.</span>
+                </div>
+                {reports.filter((r) => (r.items ?? []).length > 0).map((r) => {
+                  const max = Math.max(...r.items.map((i) => i.spend), 1);
+                  return (
+                    <div key={r.id} className="card stack ad-items" style={{ gap: 4 }}>
+                      <div className="row between" style={{ paddingBottom: 8 }}>
+                        <span className="row" style={{ gap: 8 }}>
+                          <span className={`pf-dot pf-${r.platform}`} />
+                          <span className="small" style={{ fontWeight: 600 }}>{r.platform === 'google' ? 'Google kampányok' : 'Facebook és Instagram hirdetések'}</span>
+                        </span>
+                        <span className="tiny muted">{r.items.length} {r.platform === 'google' ? 'kampány' : 'hirdetés'}</span>
+                      </div>
+                      {r.items.map((it, i) => (
+                        <div key={i} className="ad-item">
+                          <div className="stack ai-main" style={{ gap: 4, minWidth: 0 }}>
+                            <span className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+                              <span className="small" style={{ fontWeight: 500 }}>{it.name}</span>
+                              {it.star && <span className="badge badge-blue" style={{ fontSize: 10 }}>Legjobb</span>}
+                            </span>
+                            <span className="tiny muted">{it.goal}{it.extra ? ` · ${it.extra}` : ''}</span>
+                            <span className="ai-bar"><span style={{ width: `${(it.spend / max) * 100}%` }} /></span>
+                          </div>
+                          <div className="stack ai-res" style={{ gap: 2 }}>
+                            <span className="small" style={{ color: '#7ee6a8', fontWeight: 500 }}>{it.result}</span>
+                            {it.cost && <span className="tiny muted">{it.cost}</span>}
+                          </div>
+                          <span className="small ai-spend">{formatFt(it.spend)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
             {summaryLines.length > 0 && (
               <div className="card stack">
