@@ -103,7 +103,7 @@ export default async function AdsPage({ previewId, m }: { previewId?: string; m?
             <div className="row between" style={{ flexWrap: 'wrap', gap: 8 }}>
               <span className="row" style={{ gap: 8 }}>
                 <span className="pf-dot pf-shop" />
-                <span className="eyebrow" style={{ margin: 0 }}>Webshop-eladások · Shopify</span>
+                <span className="eyebrow" style={{ margin: 0 }}>Webshop-eladások · {shop.source === 'ga4' ? 'Google Analytics' : 'Shopify'}</span>
               </span>
               {shop.period_label && <span className="tiny muted">{shop.period_label}</span>}
             </div>
@@ -131,7 +131,7 @@ export default async function AdsPage({ previewId, m }: { previewId?: string; m?
                     {shop.products.map((p) => (
                       <div key={p.name} className="shop-line">
                         <span className="small" style={{ flex: 1, minWidth: 0 }}>{p.name}</span>
-                        <span className="small" style={{ fontWeight: 500, whiteSpace: 'nowrap' }}>{p.orders} rendelés</span>
+                        <span className="small" style={{ fontWeight: 500, whiteSpace: 'nowrap' }}>{p.orders} {p.unit ?? 'rendelés'}</span>
                       </div>
                     ))}
                   </div>

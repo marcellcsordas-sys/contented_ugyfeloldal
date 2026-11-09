@@ -132,7 +132,7 @@ export type ShopReport = {
   net_sales: number;
   avg_order: number;
   channels: { label: string; orders: number; revenue: number }[];
-  products: { name: string; orders: number; revenue: number }[];
+  products: { name: string; orders: number; revenue: number; unit?: string }[];
   note: string | null;
   updated_at: string;
 };
