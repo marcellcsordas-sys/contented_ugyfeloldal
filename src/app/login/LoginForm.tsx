@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/browser';
+import { logActivity } from '@/components/TrackView';
 
 export default function LoginForm() {
   const router = useRouter();
@@ -15,6 +16,7 @@ export default function LoginForm() {
     setState('sending');
     const { error } = await createClient().auth.signInWithPassword({ email: email.trim(), password });
     if (error) return setState('error');
+    logActivity('action', 'belepes', 'Belépett');
     router.replace('/');
     router.refresh();
   }

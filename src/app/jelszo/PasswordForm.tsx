@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/browser';
+import { logActivity } from '@/components/TrackView';
 
 export default function PasswordForm() {
   const router = useRouter();
@@ -20,6 +21,7 @@ export default function PasswordForm() {
     const { error } = await createClient().auth.updateUser({ password: pw, data: { pw_temp: false } });
     setBusy(false);
     if (error) return setErr(error.message.includes('different') ? 'Ez megegyezik a régi jelszavaddal.' : 'Nem sikerült menteni. Próbáld újra.');
+    logActivity('action', 'belepes', 'Saját jelszót állított be');
     router.replace('/');
     router.refresh();
   }

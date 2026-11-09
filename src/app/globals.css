@@ -465,3 +465,7 @@ button, input, textarea, select { font-family: inherit; font-size: inherit; }
   .shop-cols { grid-template-columns: 1fr; }
   .shop-line > .small:first-child { min-width: 96px; }
 }
+.act-row { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; border-top: 1px solid rgba(255,255,255,.06); }
+.act-row:first-child { border-top: 0; }
+.act-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.25); margin-top: 7px; flex-shrink: 0; }
+.act-dot.act-action { background: #3cc878; }

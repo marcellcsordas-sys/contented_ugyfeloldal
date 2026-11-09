@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import TopBar from './TopBar';
+import TrackView from './TrackView';
 
 export type PortalTab = 'naptar' | 'brief' | 'hirdetesek' | 'csomag';
 
@@ -35,6 +36,8 @@ export default function PortalShell({
 }) {
   return (
     <>
+      {!preview && <TrackView section={active} />}
+      {!preview && <TrackView section={active} />}
       <TopBar name={userName} sub={preview ? 'Ügyfélnézet előnézet' : clientName} admin={!!preview} />
       <nav className="portal-nav" aria-label="Ügyfél menü">
         <div className="portal-nav-inner">

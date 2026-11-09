@@ -5,6 +5,7 @@ import { briefDeadline } from '@/lib/brief';
 import TopBar from '@/components/TopBar';
 import { createClientAction } from './actions';
 import HandledButton from '@/components/admin/HandledButton';
+import { fmtTime } from '@/components/admin/ActivityCard';
 
 type Row = { id: string; name: string; contact_name: string | null };
 type PostRow = { client_id: string; status: string };
@@ -20,14 +21,17 @@ export default async function AdminHome() {
   const dl = briefDeadline(briefMonth);
   const dlText = `${monthLabel(`${dl.getFullYear()}-${String(dl.getMonth() + 1).padStart(2, '0')}`).name} ${dl.getDate()}.`;
 
-  const [{ data: clients }, { data: posts }, { data: reqs }, { data: briefs }] = await Promise.all([
+  const [{ data: clients }, { data: posts }, { data: reqs }, { data: briefs }, { data: acts }] = await Promise.all([
     supabase.from('clients').select('id, name, contact_name').order('name').returns<Row[]>(),
     supabase.from('posts').select('client_id, status').gte('publish_date', start).lt('publish_date', end).returns<PostRow[]>(),
     supabase.from('offer_requests').select('id, created_at, client_id, offers(title)').eq('handled', false)
       .order('created_at', { ascending: false }).returns<Req[]>(),
     supabase.from('monthly_inputs').select('client_id, submitted, submitted_at').eq('month', `${briefMonth}-01`)
       .returns<{ client_id: string; submitted: boolean; submitted_at: string | null }[]>(),
+    supabase.from('activity_log').select('client_id, created_at').gte('created_at', new Date(Date.now() - 30 * 864e5).toISOString())
+      .order('created_at', { ascending: false }).limit(2000).returns<{ client_id: string; created_at: string }[]>(),
   ]);
+  const lastAct = (id: string) => (acts ?? []).find((a) => a.client_id === id)?.created_at;
   const briefOf = (id: string) => (briefs ?? []).find((b) => b.client_id === id);
   const doneCount = (clients ?? []).filter((c) => briefOf(c.id)?.submitted).length;
 
@@ -57,7 +61,7 @@ export default async function AdminHome() {
               <div className="card scroll-x" style={{ padding: 6 }}>
                 <table className="table table-stack table-stats">
                   <thead>
-                    <tr><th>Ügyfél</th><th>Összes</th><th>Vár</th><th>Módosítás</th><th>Elfogadva</th><th>Tervező · {bml.name}</th><th></th></tr>
+                    <tr><th>Ügyfél</th><th>Összes</th><th>Vár</th><th>Módosítás</th><th>Elfogadva</th><th>Tervező · {bml.name}</th><th>Utolsó aktivitás</th><th></th></tr>
                   </thead>
                   <tbody>
                     {(clients ?? []).map((c) => (
@@ -83,6 +87,9 @@ export default async function AdminHome() {
                               </Link>
                             );
                           })()}
+                        </td>
+                        <td className="ts-stat" data-label="Utolsó aktivitás">
+                          <span className="tiny muted">{lastAct(c.id) ? fmtTime(lastAct(c.id)!) : 'Még nem'}</span>
                         </td>
                         <td className="ts-actions" style={{ textAlign: 'right' }}>
                           <Link className="btn btn-ghost btn-sm" href={`/admin/clients/${c.id}`}>Megnyitom</Link>

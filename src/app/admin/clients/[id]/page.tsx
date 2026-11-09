@@ -5,6 +5,7 @@ import { STATUS, formatPostDate, formatShortDate, monthLabel, normalizeMonth, sh
 import type { Client, Offer, Package, Post } from '@/lib/types';
 import TopBar from '@/components/TopBar';
 import ClientAccess from '@/components/admin/ClientAccess';
+import ActivityCard, { fmtTime, type ActivityRow } from '@/components/admin/ActivityCard';
 import { createAdminClient } from '@/lib/supabase/admin';
 import ActionForm from '@/components/admin/ActionForm';
 import PostRowActions from '@/components/admin/PostRowActions';
@@ -43,8 +44,17 @@ export default async function ClientAdminPage({
   const adminSb = createAdminClient();
   const access = await Promise.all((members ?? []).map(async (u) => {
     const { data } = await adminSb.auth.admin.getUserById(u.id);
-    return { id: u.id, full_name: u.full_name ?? (data.user?.email ?? '').split('@')[0], email: data.user?.email ?? '', pending: Boolean(data.user?.user_metadata?.pw_temp) };
+    return {
+      id: u.id,
+      full_name: u.full_name ?? (data.user?.email ?? '').split('@')[0],
+      email: data.user?.email ?? '',
+      pending: Boolean(data.user?.user_metadata?.pw_temp),
+      lastSeen: data.user?.last_sign_in_at ? fmtTime(data.user.last_sign_in_at) : null,
+    };
   }));
+  const { data: activity } = await supabase.from('activity_log').select('id, user_id, kind, section, detail, created_at')
+    .eq('client_id', id).order('created_at', { ascending: false }).limit(30).returns<ActivityRow[]>();
+  const names = Object.fromEntries(access.map((a) => [a.id, a.full_name]));
   const adOf = (p: 'meta' | 'google') => (ads ?? []).find((r) => r.platform === p);
   if (!client) notFound();
 
@@ -215,6 +225,7 @@ export default async function ClientAdminPage({
             </ActionForm>
 
             <ClientAccess clientId={id} clientName={client.name} members={access} />
+            <ActivityCard rows={activity ?? []} names={names} />
           </aside>
         </div>
       </div>

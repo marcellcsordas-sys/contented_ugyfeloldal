@@ -5,6 +5,16 @@ import { createClient } from '@/lib/supabase/server';
 import { missingRequired, type BriefAnswers } from '@/lib/brief';
 
 type Result = { ok: true } | { ok: false; error: string };
+type Sb = Awaited<ReturnType<typeof createClient>>;
+
+// Aktivitás napló (hibát nem dob, csak ügyfél-felhasználónál ír)
+async function log(supabase: Sb, section: string, detail: string) {
+  await supabase.rpc('log_activity', { p_kind: 'action', p_section: section, p_detail: detail }).then(() => {}, () => {});
+}
+async function postLabel(supabase: Sb, postId: string) {
+  const { data } = await supabase.from('posts').select('number, publish_date').eq('id', postId).maybeSingle();
+  return data ? `#${data.number ?? ''} ${data.publish_date}`.trim() : '';
+}
 
 export async function addComment(postId: string, body: string): Promise<Result> {
   const text = body.trim();
@@ -12,6 +22,7 @@ export async function addComment(postId: string, body: string): Promise<Result> 
   const supabase = await createClient();
   const { error } = await supabase.from('comments').insert({ post_id: postId, body: text });
   if (error) return { ok: false, error: error.message };
+  await log(supabase, 'poszt', `Hozzászólt: ${await postLabel(supabase, postId)}`);
   revalidatePath('/portal');
   return { ok: true };
 }
@@ -25,6 +36,7 @@ export async function setPostStatus(postId: string, status: 'ok' | 'mod', commen
   }
   const { error } = await supabase.rpc('client_set_post_status', { p_post: postId, p_status: status });
   if (error) return { ok: false, error: error.message };
+  await log(supabase, 'poszt', `${status === 'ok' ? 'Jóváhagyta' : 'Módosítást kért'}: ${await postLabel(supabase, postId)}`);
   revalidatePath('/portal');
   revalidatePath('/admin', 'layout');
   return { ok: true };
@@ -34,6 +46,7 @@ export async function approveMonth(month: string): Promise<Result> {
   const supabase = await createClient();
   const { error } = await supabase.rpc('client_approve_month', { p_month: `${month}-01` });
   if (error) return { ok: false, error: error.message };
+  await log(supabase, 'naptar', `Az egész hónapot jóváhagyta (${month})`);
   revalidatePath('/portal');
   return { ok: true };
 }
@@ -46,6 +59,7 @@ export async function requestOffer(offerId: string, clientId: string): Promise<R
     .from('offer_requests')
     .insert({ offer_id: offerId, client_id: clientId, requested_by: user.id });
   if (error) return { ok: false, error: error.message };
+  await log(supabase, 'csomag', 'Ajánlatot kért');
   revalidatePath('/portal');
   return { ok: true };
 }
@@ -78,6 +92,7 @@ export async function saveBrief(
     ? await supabase.from('monthly_inputs').update({ answers, updated_at: now, ...extra }).eq('id', existing.id)
     : await supabase.from('monthly_inputs').insert({ client_id: clientId, month: monthDate, answers, updated_at: now, ...extra });
   if (error) return { ok: false, error: error.message };
+  await log(supabase, 'brief', submit ? `Beküldte a tervezőt (${month})` : `Kitöltötte a tervezőt (${month})`);
   if (submit) {
     revalidatePath('/portal', 'layout');
     revalidatePath('/admin', 'layout');

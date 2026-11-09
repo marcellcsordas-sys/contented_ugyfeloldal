@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react';
 import { createClientUser, removeClientUser, resetClientUserPassword } from '@/app/admin/actions';
 
-type Member = { id: string; full_name: string; email: string; pending: boolean };
+type Member = { id: string; full_name: string; email: string; pending: boolean; lastSeen: string | null };
 type Cred = { email: string; password: string; name: string };
 
 // Ügyfél-hozzáférések kezelése: több ember egy ügyfélhez, e-mail + ideiglenes jelszó.
@@ -30,7 +30,7 @@ export default function ClientAccess({ clientId, clientName, members }: { client
             <div key={u.id} className="access-row">
               <div className="stack" style={{ gap: 0, minWidth: 0 }}>
                 <span className="small" style={{ fontWeight: 500 }}>{u.full_name}</span>
-                <span className="tiny muted" style={{ overflowWrap: 'anywhere' }}>{u.email}{u.pending ? ' · még nem állított jelszót' : ''}</span>
+                <span className="tiny muted" style={{ overflowWrap: 'anywhere' }}>{u.email}{u.pending ? ' · még nem lépett be' : u.lastSeen ? ` · utoljára belépett: ${u.lastSeen}` : ''}</span>
               </div>
               <div className="row" style={{ gap: 6, flexShrink: 0 }}>
                 <button

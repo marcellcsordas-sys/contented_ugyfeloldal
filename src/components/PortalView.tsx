@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState, useTransition } from 'react';
+import { useEffect, useMemo, useState, useTransition } from 'react';
+import { logActivity } from './TrackView';
 import type { Offer, Package, PostStatus, PostWithMedia } from '@/lib/types';
 import { STATUS, STATUS_ORDER, capitalize, formatPostDate, monthIn, monthLabel, shiftMonth } from '@/lib/format';
 import { usageRows } from '@/lib/usage';
@@ -61,6 +62,9 @@ export default function PortalView(props: Props) {
 
   const visible = filter === 'all' ? posts : posts.filter((p) => p.status === filter);
   const open = posts.find((p) => p.id === openId) ?? null;
+  useEffect(() => {
+    if (open && mode === 'client') logActivity('view', 'poszt', `#${open.number ?? ''} ${open.publish_date}`.trim());
+  }, [open, mode]);
   const waiting = counts.var;
   const ml = monthLabel(month);
 
