@@ -146,6 +146,10 @@ export async function createAccessLink(
       return { ok: false, error: 'Ez az e-mail cím egy másik ügyfélhez tartozik.' };
     }
   }
+  if (isNew && res.data.user) {
+    // A generateLink a felhasználót előbb hozza létre, mint a meghívás dátumát: az ügyfélhez itt kötjük hozzá
+    await admin.from('profiles').update({ client_id: clientId, full_name: fullName || undefined }).eq('id', res.data.user.id);
+  }
   const token = res.data.properties?.hashed_token;
   if (!token) return { ok: false, error: 'Nem sikerült linket készíteni.' };
   const type = isNew ? 'invite' : 'magiclink';
