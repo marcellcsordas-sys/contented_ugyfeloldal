@@ -114,6 +114,45 @@ export async function inviteUser(clientId: string, fd: FormData): Promise<Result
   return { ok: true };
 }
 
+// Belépő link kézi kiküldéshez: e-mail küldés nélkül készít egyszer használható linket.
+// Új címnél meghívást hoz létre az ügyfélhez, meglévőnél új belépő linket ad.
+export async function createAccessLink(
+  clientId: string,
+  fd: FormData,
+): Promise<{ ok: true; link: string; isNew: boolean } | { ok: false; error: string }> {
+  const { supabase } = await requireAdmin();
+  const email = str(fd, 'email').toLowerCase();
+  const fullName = str(fd, 'full_name');
+  if (!email) return { ok: false, error: 'Az e-mail cím kötelező.' };
+  const admin = createAdminClient();
+  const h = await headers();
+  const host = h.get('x-forwarded-host') ?? h.get('host') ?? '';
+  const proto = h.get('x-forwarded-proto') ?? 'https';
+  const site = host ? `${proto}://${host}` : (process.env.NEXT_PUBLIC_SITE_URL ?? '');
+
+  let isNew = true;
+  let res = await admin.auth.admin.generateLink({
+    type: 'invite',
+    email,
+    options: { data: { client_id: clientId, full_name: fullName || undefined }, redirectTo: `${site}/auth/callback` },
+  });
+  if (res.error) {
+    // Már létező felhasználó: csak akkor adunk linket, ha ehhez az ügyfélhez tartozik
+    isNew = false;
+    res = await admin.auth.admin.generateLink({ type: 'magiclink', email });
+    if (res.error || !res.data.user) return { ok: false, error: res.error?.message ?? 'Nem sikerült linket készíteni.' };
+    const { data: prof } = await supabase.from('profiles').select('client_id, role').eq('id', res.data.user.id).maybeSingle();
+    if (!prof || (prof.role !== 'admin' && prof.client_id !== clientId)) {
+      return { ok: false, error: 'Ez az e-mail cím egy másik ügyfélhez tartozik.' };
+    }
+  }
+  const token = res.data.properties?.hashed_token;
+  if (!token) return { ok: false, error: 'Nem sikerült linket készíteni.' };
+  const type = isNew ? 'invite' : 'magiclink';
+  revalidatePath(`/admin/clients/${clientId}`);
+  return { ok: true, isNew, link: `${site}/auth/callback?token_hash=${token}&type=${type}&next=/jelszo` };
+}
+
 export type PostInput = {
   number: number | null;
   platform: string;

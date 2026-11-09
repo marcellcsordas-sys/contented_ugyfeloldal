@@ -4,10 +4,11 @@ import { requireAdmin } from '@/lib/session';
 import { STATUS, formatPostDate, formatShortDate, monthLabel, normalizeMonth, shiftMonth, monthRange } from '@/lib/format';
 import type { Client, Offer, Package, Post } from '@/lib/types';
 import TopBar from '@/components/TopBar';
+import AccessLinkForm from '@/components/admin/AccessLinkForm';
 import ActionForm from '@/components/admin/ActionForm';
 import PostRowActions from '@/components/admin/PostRowActions';
 import OfferOff from '@/components/admin/OfferOff';
-import { inviteUser, saveAdReport, saveOffer, savePackage } from '../../actions';
+import { createAccessLink, saveAdReport, saveOffer, savePackage } from '../../actions';
 import { goalText, type MonthlyInput } from '@/lib/brief';
 import type { AdReport } from '@/lib/types';
 
@@ -206,7 +207,7 @@ export default async function ClientAdminPage({
               <div className="field"><label htmlFor="p-contract">Szerződés</label><input id="p-contract" name="contract_note" className="input" placeholder="Határozatlan idejű, 30 napos felmondással." defaultValue={pkg?.contract_note ?? ''} /></div>
             </ActionForm>
 
-            <ActionForm action={inviteUser.bind(null, id)} submitLabel="Meghívót küldök" successText="Meghívó elküldve." resetOnSuccess>
+            <AccessLinkForm action={createAccessLink.bind(null, id)}>
               <span className="eyebrow">Hozzáférés</span>
               {(members ?? []).length === 0 ? (
                 <span className="small muted">Még senki nem fér hozzá ehhez az ügyfélhez.</span>
@@ -215,9 +216,8 @@ export default async function ClientAdminPage({
                   {(members ?? []).map((u) => <li key={u.id}>{u.full_name}</li>)}
                 </ul>
               )}
-              <div className="field"><label htmlFor="i-name">Név</label><input id="i-name" name="full_name" className="input" placeholder="Dominik" /></div>
-              <div className="field"><label htmlFor="i-email">E-mail</label><input id="i-email" name="email" type="email" required className="input" placeholder="dominik@ceg.hu" /></div>
-            </ActionForm>
+              <span className="tiny muted">A link nem megy ki automatikusan: másold be a saját leveledbe. Már felvett ügyfélnek ugyanitt kérhetsz új linket, ha elfelejtette a jelszavát.</span>
+            </AccessLinkForm>
           </aside>
         </div>
       </div>

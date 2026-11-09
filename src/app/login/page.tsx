@@ -11,12 +11,12 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         </div>
         <h1 className="h1" style={{ fontSize: 40 }}>
           Belépés.
-          <span className="second">Jelszó nélkül.</span>
+          <span className="second">Ügyfélfelület.</span>
         </h1>
         <p className="muted" style={{ margin: 0 }}>
-          Írd be az e-mail címed, és küldünk egy belépő linket. Egy kattintás, és bent vagy.
+          Lépj be az e-mail címeddel és a jelszavaddal. Az első belépéshez a tőlünk kapott linket használd.
         </p>
-        {error && <p className="error small" style={{ margin: 0 }}>A belépő link lejárt vagy hibás. Kérj újat.</p>}
+        {error && <p className="error small" style={{ margin: 0 }}>A belépő link lejárt vagy már felhasználták. Írj nekünk, és küldünk újat.</p>}
         <LoginForm />
       </div>
     </div>

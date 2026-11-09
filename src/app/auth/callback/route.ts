@@ -8,6 +8,8 @@ export async function GET(request: NextRequest) {
   const code = url.searchParams.get('code');
   const tokenHash = url.searchParams.get('token_hash');
   const type = url.searchParams.get('type') as EmailOtpType | null;
+  const nextParam = url.searchParams.get('next');
+  const next = nextParam && nextParam.startsWith('/') && !nextParam.startsWith('//') ? nextParam : '/';
   const supabase = await createClient();
 
   // Se code, se token_hash: a token a # részben jött (alap meghívó link).
@@ -25,5 +27,5 @@ export async function GET(request: NextRequest) {
     ok = !error;
   }
 
-  return NextResponse.redirect(new URL(ok ? '/' : '/login?error=1', url.origin));
+  return NextResponse.redirect(new URL(ok ? next : '/login?error=1', url.origin));
 }
