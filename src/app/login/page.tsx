@@ -14,7 +14,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           <span className="second">Ügyfélfelület.</span>
         </h1>
         <p className="muted" style={{ margin: 0 }}>
-          Lépj be az e-mail címeddel és a jelszavaddal. Az első belépéshez a tőlünk kapott linket használd.
+          Lépj be az e-mail címeddel és a jelszavaddal. Az első belépéshez a tőlünk kapott ideiglenes jelszót használd.
         </p>
         {error && <p className="error small" style={{ margin: 0 }}>A belépő link lejárt vagy már felhasználták. Írj nekünk, és küldünk újat.</p>}
         <LoginForm />

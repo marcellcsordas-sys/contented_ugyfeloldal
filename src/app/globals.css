@@ -446,3 +446,6 @@ button, input, textarea, select { font-family: inherit; font-size: inherit; }
   .ai-res { grid-area: res; text-align: left; align-items: flex-start; flex-direction: row !important; gap: 10px !important; }
 }
 .ai-google .ai-bar span { background: #3cc878; }
+.access-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid rgba(255,255,255,.07); }
+.access-row:first-child { border-top: 0; }
+@media (max-width: 640px) { .access-row { flex-direction: column; align-items: flex-start; } }

@@ -4,11 +4,12 @@ import { requireAdmin } from '@/lib/session';
 import { STATUS, formatPostDate, formatShortDate, monthLabel, normalizeMonth, shiftMonth, monthRange } from '@/lib/format';
 import type { Client, Offer, Package, Post } from '@/lib/types';
 import TopBar from '@/components/TopBar';
-import AccessLinkForm from '@/components/admin/AccessLinkForm';
+import ClientAccess from '@/components/admin/ClientAccess';
+import { createAdminClient } from '@/lib/supabase/admin';
 import ActionForm from '@/components/admin/ActionForm';
 import PostRowActions from '@/components/admin/PostRowActions';
 import OfferOff from '@/components/admin/OfferOff';
-import { createAccessLink, saveAdReport, saveOffer, savePackage } from '../../actions';
+import { saveAdReport, saveOffer, savePackage } from '../../actions';
 import { goalText, type MonthlyInput } from '@/lib/brief';
 import type { AdReport } from '@/lib/types';
 
@@ -38,6 +39,12 @@ export default async function ClientAdminPage({
     supabase.from('monthly_inputs').select('*').eq('client_id', id).eq('month', `${month}-01`).maybeSingle<MonthlyInput>(),
     supabase.from('ad_reports').select('*').eq('client_id', id).eq('month', `${month}-01`).returns<AdReport[]>(),
   ]);
+  // A tagok e-mail címe az auth táblában van: service role-lal olvassuk (az oldal csak adminnak érhető el)
+  const adminSb = createAdminClient();
+  const access = await Promise.all((members ?? []).map(async (u) => {
+    const { data } = await adminSb.auth.admin.getUserById(u.id);
+    return { id: u.id, full_name: u.full_name ?? (data.user?.email ?? '').split('@')[0], email: data.user?.email ?? '', pending: Boolean(data.user?.user_metadata?.pw_temp) };
+  }));
   const adOf = (p: 'meta' | 'google') => (ads ?? []).find((r) => r.platform === p);
   if (!client) notFound();
 
@@ -207,17 +214,7 @@ export default async function ClientAdminPage({
               <div className="field"><label htmlFor="p-contract">Szerződés</label><input id="p-contract" name="contract_note" className="input" placeholder="Határozatlan idejű, 30 napos felmondással." defaultValue={pkg?.contract_note ?? ''} /></div>
             </ActionForm>
 
-            <AccessLinkForm action={createAccessLink.bind(null, id)}>
-              <span className="eyebrow">Hozzáférés</span>
-              {(members ?? []).length === 0 ? (
-                <span className="small muted">Még senki nem fér hozzá ehhez az ügyfélhez.</span>
-              ) : (
-                <ul className="small" style={{ margin: 0, paddingLeft: 18 }}>
-                  {(members ?? []).map((u) => <li key={u.id}>{u.full_name}</li>)}
-                </ul>
-              )}
-              <span className="tiny muted">A link nem megy ki automatikusan: másold be a saját leveledbe. Már felvett ügyfélnek ugyanitt kérhetsz új linket, ha elfelejtette a jelszavát.</span>
-            </AccessLinkForm>
+            <ClientAccess clientId={id} clientName={client.name} members={access} />
           </aside>
         </div>
       </div>

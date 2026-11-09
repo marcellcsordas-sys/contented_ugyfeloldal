@@ -157,6 +157,67 @@ export async function createAccessLink(
   return { ok: true, isNew, link: `${site}/auth/callback?token_hash=${token}&type=${type}&next=/jelszo` };
 }
 
+// ---- Ügyfél-hozzáférések: e-mail + ideiglenes jelszó, e-mail küldés nélkül ----
+function tempPassword() {
+  const abc = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const bytes = crypto.getRandomValues(new Uint8Array(12));
+  const s = Array.from(bytes, (b) => abc[b % abc.length]).join('');
+  return `${s.slice(0, 4)}-${s.slice(4, 8)}-${s.slice(8, 12)}`;
+}
+
+type CredResult = { ok: true; email: string; password: string } | { ok: false; error: string };
+
+// Új ember felvétele egy ügyfélhez. Az ideiglenes jelszót első belépéskor le kell cserélnie.
+export async function createClientUser(clientId: string, fd: FormData): Promise<CredResult> {
+  await requireAdmin();
+  const email = str(fd, 'email').toLowerCase();
+  const fullName = str(fd, 'full_name');
+  if (!email) return { ok: false, error: 'Az e-mail cím kötelező.' };
+  const admin = createAdminClient();
+  const password = tempPassword();
+  const { data, error } = await admin.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: { full_name: fullName || undefined, pw_temp: true },
+  });
+  if (error || !data.user) {
+    const exists = error?.message.toLowerCase().includes('already');
+    return { ok: false, error: exists ? 'Ezzel a címmel már van fiók. A listában adj neki új jelszót.' : (error?.message ?? 'Nem sikerült létrehozni.') };
+  }
+  await admin.from('profiles').update({ client_id: clientId, role: 'client', full_name: fullName || email.split('@')[0] }).eq('id', data.user.id);
+  revalidatePath(`/admin/clients/${clientId}`);
+  return { ok: true, email, password };
+}
+
+// Új ideiglenes jelszó (elfelejtett jelszó esetén). Csak az adott ügyfél emberére, vagy adminra.
+export async function resetClientUserPassword(clientId: string, userId: string): Promise<CredResult> {
+  await requireAdmin();
+  const admin = createAdminClient();
+  const { data: prof } = await admin.from('profiles').select('client_id, role').eq('id', userId).maybeSingle();
+  if (!prof || (prof.role !== 'admin' && prof.client_id !== clientId)) return { ok: false, error: 'Ez a felhasználó nem ehhez az ügyfélhez tartozik.' };
+  const password = tempPassword();
+  const { data: u } = await admin.auth.admin.getUserById(userId);
+  const { error } = await admin.auth.admin.updateUserById(userId, {
+    password,
+    user_metadata: { ...(u.user?.user_metadata ?? {}), pw_temp: true },
+  });
+  if (error) return { ok: false, error: error.message };
+  return { ok: true, email: u.user?.email ?? '', password };
+}
+
+// Hozzáférés megszüntetése: a fiók törlődik, az ügyfél adatai megmaradnak.
+export async function removeClientUser(clientId: string, userId: string): Promise<Result> {
+  await requireAdmin();
+  const admin = createAdminClient();
+  const { data: prof } = await admin.from('profiles').select('client_id, role').eq('id', userId).maybeSingle();
+  if (!prof || prof.role === 'admin' || prof.client_id !== clientId) return { ok: false, error: 'Ezt a felhasználót innen nem lehet törölni.' };
+  const { error } = await admin.auth.admin.deleteUser(userId);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath(`/admin/clients/${clientId}`);
+  return { ok: true };
+}
+
 export type PostInput = {
   number: number | null;
   platform: string;

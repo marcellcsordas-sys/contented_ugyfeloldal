@@ -36,7 +36,7 @@ export default function LoginForm() {
         {state === 'sending' ? 'Belépés...' : 'Belépek'}
       </button>
       <p className="tiny muted" style={{ margin: 0 }}>
-        Elfelejtetted a jelszavad? Írj nekünk a <a href="mailto:hello@contented.hu" style={{ color: 'inherit' }}>hello@contented.hu</a> címre, és küldünk új belépő linket.
+        Elfelejtetted a jelszavad? Írj nekünk a <a href="mailto:hello@contented.hu" style={{ color: 'inherit' }}>hello@contented.hu</a> címre, és küldünk új ideiglenes jelszót.
       </p>
     </form>
   );

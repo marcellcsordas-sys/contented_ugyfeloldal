@@ -12,10 +12,10 @@ export default async function PasswordPage() {
         <span className="brand-word">contented</span>
         <h1 className="h1" style={{ fontSize: 40 }}>
           Üdv a felületen.
-          <span className="second">Állíts be egy jelszót.</span>
+          <span className="second">Állíts be saját jelszót.</span>
         </h1>
         <p className="muted" style={{ margin: 0 }}>
-          Ezzel lépsz be legközelebb, az e-mail címeddel együtt: <strong>{user.email}</strong>
+          Az ideiglenes jelszó helyett ezzel lépsz be legközelebb, az e-mail címeddel együtt: <strong>{user.email}</strong>
         </p>
         <PasswordForm />
       </div>

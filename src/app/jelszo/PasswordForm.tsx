@@ -17,7 +17,7 @@ export default function PasswordForm() {
     if (pw.length < 8) return setErr('Legalább 8 karakter legyen.');
     if (pw !== pw2) return setErr('A két jelszó nem egyezik.');
     setBusy(true);
-    const { error } = await createClient().auth.updateUser({ password: pw });
+    const { error } = await createClient().auth.updateUser({ password: pw, data: { pw_temp: false } });
     setBusy(false);
     if (error) return setErr(error.message.includes('different') ? 'Ez megegyezik a régi jelszavaddal.' : 'Nem sikerült menteni. Próbáld újra.');
     router.replace('/');

@@ -31,6 +31,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Ideiglenes jelszóval belépett felhasználó előbb saját jelszót állít be
+  if (user && user.user_metadata?.pw_temp && !path.startsWith('/jelszo') && !path.startsWith('/auth')) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/jelszo';
+    url.search = '';
+    return NextResponse.redirect(url);
+  }
+
   return response;
 }
 
