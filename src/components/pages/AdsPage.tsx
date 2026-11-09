@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { capitalize, formatFt, formatNum, monthLabel, normalizeMonth, shiftMonth } from '@/lib/format';
 import { getPortalCtx } from '@/lib/portal';
 import { signPaths } from '@/lib/session';
-import type { AdReport } from '@/lib/types';
+import type { AdReport, ShopReport } from '@/lib/types';
 import PortalShell, { NoClient } from '@/components/PortalShell';
 
 function n(v: number | null | undefined) {
@@ -35,6 +35,9 @@ export default async function AdsPage({ previewId, m }: { previewId?: string; m?
     .eq('month', `${month}-01`)
     .order('platform')
     .returns<AdReport[]>();
+  const { data: shopData } = await supabase
+    .from('shop_reports').select('*').eq('client_id', clientId).eq('month', `${month}-01`).returns<ShopReport[]>();
+  const shop = (shopData ?? [])[0] ?? null;
   const reports = [...(data ?? [])].sort((a, b) => (a.platform === b.platform ? 0 : a.platform === 'meta' ? -1 : 1));
   const intro = reports.find((r) => r.intro)?.intro;
   const PNAME = { meta: 'Facebook és Instagram', google: 'Google' } as const;
@@ -81,7 +84,7 @@ export default async function AdsPage({ previewId, m }: { previewId?: string; m?
             <h1 className="h1">
               {capitalize(ml.name)}.
               <span className="second">
-                {reports.length === 0 ? 'A riport hamarosan itt lesz.' : 'Így dolgoztak a hirdetéseid.'}
+                {reports.length === 0 && !shop ? 'A riport hamarosan itt lesz.' : 'Így dolgoztak a hirdetéseid.'}
               </span>
             </h1>
           </div>
@@ -95,8 +98,52 @@ export default async function AdsPage({ previewId, m }: { previewId?: string; m?
 
         {intro && <p className="ads-intro">{intro}</p>}
 
+        {shop && (
+          <div className="card stack shop-card" style={{ gap: 18 }}>
+            <div className="row between" style={{ flexWrap: 'wrap', gap: 8 }}>
+              <span className="row" style={{ gap: 8 }}>
+                <span className="pf-dot pf-shop" />
+                <span className="eyebrow" style={{ margin: 0 }}>Webshop-eladások · Shopify</span>
+              </span>
+              {shop.period_label && <span className="tiny muted">{shop.period_label}</span>}
+            </div>
+            <div className="shop-stats">
+              <div><b>{n(shop.orders)}</b><span>rendelés</span></div>
+              <div><b>{formatFt(shop.revenue)}</b><span>bevétel (szállítással, áfával)</span></div>
+              <div><b>{formatFt(shop.avg_order)}</b><span>átlagos kosárérték</span></div>
+            </div>
+            {shop.channels.length > 0 && (
+              <div className="shop-cols">
+                <div className="stack" style={{ gap: 10 }}>
+                  <span className="tiny muted" style={{ textTransform: 'uppercase', letterSpacing: 1 }}>Honnan jöttek a vásárlók</span>
+                  {shop.channels.map((c) => (
+                    <div key={c.label} className="shop-line">
+                      <span className="small">{c.label}</span>
+                      <span className="ai-bar" style={{ flex: 1, margin: 0, maxWidth: 'none' }}><span style={{ width: `${(c.orders / Math.max(shop.orders, 1)) * 100}%`, background: '#ffb37a' }} /></span>
+                      <span className="small" style={{ fontWeight: 500, whiteSpace: 'nowrap' }}>{c.orders} rendelés</span>
+                      <span className="tiny muted shop-rev">{formatFt(c.revenue)}</span>
+                    </div>
+                  ))}
+                </div>
+                {shop.products.length > 0 && (
+                  <div className="stack" style={{ gap: 10 }}>
+                    <span className="tiny muted" style={{ textTransform: 'uppercase', letterSpacing: 1 }}>Legnépszerűbb termékek</span>
+                    {shop.products.map((p) => (
+                      <div key={p.name} className="shop-line">
+                        <span className="small" style={{ flex: 1, minWidth: 0 }}>{p.name}</span>
+                        <span className="small" style={{ fontWeight: 500, whiteSpace: 'nowrap' }}>{p.orders} rendelés</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+            {shop.note && <p className="tiny muted" style={{ margin: 0 }}>{shop.note}</p>}
+          </div>
+        )}
+
         {reports.length === 0 ? (
-          <div className="empty">
+          !shop && <div className="empty">
             Itt látod majd havonta, mit hoztak a hirdetések, hány emberhez jutottunk el, és melyik hirdetés teljesített a legjobban.
           </div>
         ) : (

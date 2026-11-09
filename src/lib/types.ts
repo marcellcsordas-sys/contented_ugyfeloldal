@@ -120,3 +120,19 @@ export type AdHighlight = {
   stats: { label: string; value: string }[];
   note?: string;
 };
+
+export type ShopReport = {
+  id: string;
+  client_id: string;
+  month: string;
+  source: string;
+  period_label: string | null;
+  orders: number;
+  revenue: number;
+  net_sales: number;
+  avg_order: number;
+  channels: { label: string; orders: number; revenue: number }[];
+  products: { name: string; orders: number; revenue: number }[];
+  note: string | null;
+  updated_at: string;
+};
