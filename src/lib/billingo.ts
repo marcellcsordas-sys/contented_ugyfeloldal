@@ -55,16 +55,29 @@ function toInvoice(d: any): Invoice {
   };
 }
 
+// Ugyanaz a cég a Billingóban több partnerként is szerepelhet: az azonos adószámúakat együtt kezeljük.
+export async function relatedPartnerIds(partnerId: number): Promise<number[]> {
+  const p = await api(`/partners/${partnerId}`, 3600);
+  const tax: string | undefined = p?.taxcode || undefined;
+  if (!tax) return [partnerId];
+  const j = await api(`/partners?query=${encodeURIComponent(tax)}&per_page=25`, 3600);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ids = ((j?.data ?? []) as any[]).filter((x) => x.taxcode === tax).map((x) => Number(x.id));
+  return Array.from(new Set([partnerId, ...ids]));
+}
+
 // Az ügyfél utolsó számlái (sztornózott és sztornó számlák nélkül), legfrissebb elöl.
 export async function partnerInvoices(partnerId: number, limit = 12): Promise<Invoice[] | null> {
-  const j = await api(`/documents?partner_id=${partnerId}&type=invoice&per_page=${limit}&page=1`);
-  if (!j) return null;
+  const ids = await relatedPartnerIds(partnerId);
+  const pages = await Promise.all(ids.map((id) => api(`/documents?partner_id=${id}&type=invoice&per_page=${limit}&page=1`)));
+  if (pages.every((j) => !j)) return null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const list: any[] = Array.isArray(j.data) ? j.data : [];
+  const list: any[] = pages.flatMap((j) => (Array.isArray(j?.data) ? j.data : []));
   return list
-    .filter((d) => !d.cancelled && d.type !== 'cancellation' && (!d.partner?.id || d.partner.id === partnerId))
+    .filter((d) => !d.cancelled && d.type !== 'cancellation' && (!d.partner?.id || ids.includes(Number(d.partner.id))))
     .map(toInvoice)
-    .sort((a, b) => (a.date < b.date ? 1 : -1));
+    .sort((a, b) => (a.date < b.date ? 1 : -1))
+    .slice(0, limit);
 }
 
 // Az "aktuális" számla: a lejárt, ha van; különben a nyitott; különben a legutóbbi.
