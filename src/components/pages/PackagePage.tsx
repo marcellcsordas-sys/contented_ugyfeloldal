@@ -28,6 +28,7 @@ export default async function PackagePage({ previewId }: { previewId?: string; m
       base={ctx.base}
       userName={ctx.userName}
       clientName={client.name}
+      clientRow={client}
       preview={ctx.mode === 'preview' ? { backHref: `/admin/clients/${clientId}` } : undefined}
     >
       <div className="wrap">

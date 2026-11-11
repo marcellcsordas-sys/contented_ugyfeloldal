@@ -29,6 +29,7 @@ export default async function CalendarPage({ previewId, m }: { previewId?: strin
       base={ctx.base}
       userName={ctx.userName}
       clientName={client.name}
+      clientRow={client}
       preview={ctx.mode === 'preview' ? { backHref: `/admin/clients/${clientId}?m=${month}` } : undefined}
     >
       <PortalView

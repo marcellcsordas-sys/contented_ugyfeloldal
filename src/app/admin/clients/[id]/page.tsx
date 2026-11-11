@@ -5,6 +5,8 @@ import { STATUS, formatPostDate, formatShortDate, monthLabel, normalizeMonth, sh
 import type { Client, Offer, Package, Post } from '@/lib/types';
 import TopBar from '@/components/TopBar';
 import ClientAccess from '@/components/admin/ClientAccess';
+import BillingForm from '@/components/admin/BillingForm';
+import { billingoConfigured } from '@/lib/billingo';
 import ActivityCard, { fmtTime, type ActivityRow } from '@/components/admin/ActivityCard';
 import { createAdminClient } from '@/lib/supabase/admin';
 import ActionForm from '@/components/admin/ActionForm';
@@ -226,6 +228,7 @@ export default async function ClientAdminPage({
 
             <ClientAccess clientId={id} clientName={client.name} members={access} />
             <ActivityCard rows={activity ?? []} names={names} />
+            <BillingForm clientId={id} clientName={client.name} partnerId={client.billingo_partner_id ?? null} driveUrl={client.ad_invoices_url ?? null} configured={billingoConfigured()} />
           </aside>
         </div>
       </div>

@@ -6,6 +6,7 @@ import { headers } from 'next/headers';
 import { requireAdmin } from '@/lib/session';
 import { createAdminClient } from '@/lib/supabase/admin';
 import type { PostStatus } from '@/lib/types';
+import { billingoConfigured, searchPartners } from '@/lib/billingo';
 
 type Result = { ok: true; id?: string } | { ok: false; error: string };
 
@@ -216,6 +217,26 @@ export async function removeClientUser(clientId: string, userId: string): Promis
   if (error) return { ok: false, error: error.message };
   revalidatePath(`/admin/clients/${clientId}`);
   return { ok: true };
+}
+
+// Számlák beállítása: Billingo partner és a hirdetési számlák Drive linkje
+export async function saveBilling(clientId: string, fd: FormData): Promise<Result> {
+  const { supabase } = await requireAdmin();
+  const pid = str(fd, 'billingo_partner_id').replace(/\D/g, '');
+  const url = str(fd, 'ad_invoices_url');
+  if (url && !/^https:\/\//.test(url)) return { ok: false, error: 'A Drive link https://-sel kezdődjön.' };
+  const { error } = await supabase.from('clients')
+    .update({ billingo_partner_id: pid ? Number(pid) : null, ad_invoices_url: url || null }).eq('id', clientId);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath(`/admin/clients/${clientId}`);
+  return { ok: true };
+}
+
+export async function findBillingoPartners(q: string) {
+  await requireAdmin();
+  if (!billingoConfigured()) return { ok: false as const, error: 'A Billingo API kulcs még nincs beállítva.' };
+  if (q.trim().length < 2) return { ok: true as const, partners: [] };
+  return { ok: true as const, partners: await searchPartners(q.trim()) };
 }
 
 export type PostInput = {

@@ -42,6 +42,7 @@ export default async function BriefPage({ previewId, m }: { previewId?: string; 
       base={ctx.base}
       userName={ctx.userName}
       clientName={client.name}
+      clientRow={client}
       preview={ctx.mode === 'preview' ? { backHref: `/admin/clients/${clientId}` } : undefined}
     >
       <BriefWizard

@@ -469,3 +469,28 @@ button, input, textarea, select { font-family: inherit; font-size: inherit; }
 .act-row:first-child { border-top: 0; }
 .act-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.25); margin-top: 7px; flex-shrink: 0; }
 .act-dot.act-action { background: #3cc878; }
+
+/* Aktuális számla menüpont színe */
+.portal-tab { position: relative; }
+.portal-tab.inv-open { color: #ffd84d; }
+.portal-tab.inv-overdue { color: #ff6b6b; }
+.portal-tab.inv-paid { color: #5fd68e; }
+.inv-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 3px rgba(255,255,255,.04); }
+@media (max-width: 640px) { .inv-dot { position: absolute; top: 7px; right: calc(50% - 16px); } }
+.inv-hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 20px; align-items: center; }
+.inv-status { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; }
+.inv-status.s-open { background: rgba(255,216,77,.12); color: #ffd84d; }
+.inv-status.s-overdue { background: rgba(255,107,107,.12); color: #ff6b6b; }
+.inv-status.s-paid { background: rgba(95,214,142,.12); color: #5fd68e; }
+.inv-card.s-open { border-color: rgba(255,216,77,.35); }
+.inv-card.s-overdue { border-color: rgba(255,107,107,.45); }
+.inv-card.s-paid { border-color: rgba(95,214,142,.35); }
+.inv-meta { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.inv-meta div { display: flex; flex-direction: column; gap: 2px; }
+.inv-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; gap: 16px; align-items: center; padding: 12px 0; border-top: 1px solid rgba(255,255,255,.07); }
+@media (max-width: 640px) {
+  .inv-hero { grid-template-columns: 1fr; }
+  .inv-meta { grid-template-columns: 1fr 1fr; }
+  .inv-row { grid-template-columns: minmax(0, 1fr) auto; }
+  .inv-row .inv-hide-m { display: none; }
+}

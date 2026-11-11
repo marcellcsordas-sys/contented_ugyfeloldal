@@ -71,6 +71,7 @@ export default async function AdsPage({ previewId, m }: { previewId?: string; m?
       base={ctx.base}
       userName={ctx.userName}
       clientName={client.name}
+      clientRow={client}
       preview={ctx.mode === 'preview' ? { backHref: `/admin/clients/${clientId}?m=${month}` } : undefined}
     >
       <div className="wrap stack" style={{ gap: 24 }}>

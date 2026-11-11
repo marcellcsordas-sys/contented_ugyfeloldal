@@ -1,6 +1,13 @@
 export type PostStatus = 'keszul' | 'var' | 'mod' | 'ok' | 'pub';
 
-export type Client = { id: string; name: string; contact_name: string | null; created_at: string };
+export type Client = {
+  id: string;
+  name: string;
+  contact_name: string | null;
+  created_at: string;
+  billingo_partner_id?: number | null;
+  ad_invoices_url?: string | null;
+};
 
 export type Profile = {
   id: string;
