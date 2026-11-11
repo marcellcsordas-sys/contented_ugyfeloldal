@@ -58,11 +58,19 @@ function toInvoice(d: any): Invoice {
 // Ugyanaz a cég a Billingóban több partnerként is szerepelhet: az azonos adószámúakat együtt kezeljük.
 export async function relatedPartnerIds(partnerId: number): Promise<number[]> {
   const p = await api(`/partners/${partnerId}`, 3600);
-  const tax: string | undefined = p?.taxcode || undefined;
-  if (!tax) return [partnerId];
-  const j = await api(`/partners?query=${encodeURIComponent(tax)}&per_page=25`, 3600);
+  if (!p) return [partnerId];
+  const tax: string = String(p.taxcode ?? '').replace(/\s/g, '');
+  const name: string = String(p.name ?? '').trim();
+  const norm = (x: string) => x.toLowerCase().replace(/[^a-z0-9áéíóöőúüű]/g, '');
+  // A Billingo név szerint keres; ugyanazt a céget az adószám (vagy a név) azonosítja
+  const word = name.split(/\s+/)[0] ?? '';
+  const queries = Array.from(new Set([word, tax].filter((q) => q.length >= 3)));
+  const results = await Promise.all(queries.map((q) => api(`/partners?query=${encodeURIComponent(q)}&per_page=50`, 3600)));
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const ids = ((j?.data ?? []) as any[]).filter((x) => x.taxcode === tax).map((x) => Number(x.id));
+  const all = results.flatMap((j) => (j?.data ?? []) as any[]);
+  const ids = all
+    .filter((x) => (tax ? String(x.taxcode ?? '').replace(/\s/g, '') === tax : norm(String(x.name ?? '')) === norm(name)))
+    .map((x) => Number(x.id));
   return Array.from(new Set([partnerId, ...ids]));
 }
 
