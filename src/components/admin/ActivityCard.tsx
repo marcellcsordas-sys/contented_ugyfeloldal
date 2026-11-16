@@ -8,6 +8,7 @@ const SECTION: Record<string, string> = {
   csomag: 'Csomagom',
   poszt: 'Poszt',
   belepes: 'Belépés',
+  szamla: 'Aktuális számlám',
 };
 
 export function fmtTime(iso: string) {
