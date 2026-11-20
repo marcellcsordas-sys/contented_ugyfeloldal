@@ -16,22 +16,22 @@ async function postLabel(supabase: Sb, postId: string) {
   return data ? `#${data.number ?? ''} ${data.publish_date}`.trim() : '';
 }
 
-export async function addComment(postId: string, body: string): Promise<Result> {
+export async function addComment(postId: string, body: string, timecode?: number | null): Promise<Result> {
   const text = body.trim();
   if (!text) return { ok: false, error: 'Üres komment.' };
   const supabase = await createClient();
-  const { error } = await supabase.from('comments').insert({ post_id: postId, body: text });
+  const { error } = await supabase.from('comments').insert({ post_id: postId, body: text, timecode: timecode ?? null });
   if (error) return { ok: false, error: error.message };
   await log(supabase, 'poszt', `Hozzászólt: ${await postLabel(supabase, postId)}`);
   revalidatePath('/portal');
   return { ok: true };
 }
 
-export async function setPostStatus(postId: string, status: 'ok' | 'mod', comment: string): Promise<Result> {
+export async function setPostStatus(postId: string, status: 'ok' | 'mod', comment: string, timecode?: number | null): Promise<Result> {
   const supabase = await createClient();
   const text = comment.trim() || (status === 'mod' ? 'Módosítást kérek, egyeztessünk.' : '');
   if (text) {
-    const { error } = await supabase.from('comments').insert({ post_id: postId, body: text });
+    const { error } = await supabase.from('comments').insert({ post_id: postId, body: text, timecode: timecode ?? null });
     if (error) return { ok: false, error: error.message };
   }
   const { error } = await supabase.rpc('client_set_post_status', { p_post: postId, p_status: status });

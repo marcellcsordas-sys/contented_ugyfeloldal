@@ -15,13 +15,13 @@ export function PlayIcon({ size = 14 }: { size?: number }) {
 }
 
 // Kártyán fix magasság (mobilon kis bélyegkép), részletes nézetben valódi képarány.
-export default function PostVisual({ post, large = false }: { post: PostWithMedia; large?: boolean }) {
+export default function PostVisual({ post, large = false, videoRef }: { post: PostWithMedia; large?: boolean; videoRef?: React.Ref<HTMLVideoElement> }) {
   const label = `${post.content_type || (post.is_video ? 'Videó' : 'Kreatív')} ${post.format}`;
   const style: React.CSSProperties | undefined = large ? { aspectRatio: ratioOf(post.format) } : undefined;
   if (large && post.video_src) {
     return (
       <div className="drive-video" style={{ aspectRatio: ratioOf(post.format) }}>
-        <video src={post.video_src} poster={post.visual_url ?? undefined} controls playsInline preload="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', background: '#111' }} />
+        <video ref={videoRef} src={post.video_src} poster={post.visual_url ?? undefined} controls playsInline preload="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', background: '#111' }} />
       </div>
     );
   }
@@ -35,7 +35,7 @@ export default function PostVisual({ post, large = false }: { post: PostWithMedi
     <div className={`visual ${large ? 'visual-large' : 'visual-card'} ${post.visual_url ? '' : 'placeholder'}`} style={style}>
       {post.visual_url && videoFile && (
         large ? (
-          <video src={post.visual_url} controls playsInline preload="metadata" />
+          <video ref={videoRef} src={post.visual_url} controls playsInline preload="metadata" />
         ) : (
           <video src={post.visual_url} muted playsInline preload="metadata" />
         )

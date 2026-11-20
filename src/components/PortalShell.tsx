@@ -36,7 +36,7 @@ export default async function PortalShell({
   base: string;
   userName: string;
   clientName: string;
-  clientRow?: { billingo_partner_id?: number | null; ad_invoices_url?: string | null };
+  clientRow?: { billingo_partner_id?: number | null; ad_invoices_url?: string | null; portal_mode?: string | null };
   preview?: { backHref: string };
   children: React.ReactNode;
 }) {
@@ -47,14 +47,18 @@ export default async function PortalShell({
     inv = list ? currentInvoice(list)?.status ?? null : null;
   }
   const showInvoices = Boolean(clientRow?.billingo_partner_id || clientRow?.ad_invoices_url);
+  // Videós jóváhagyási mód: csak Tartalmak, Csomagom, Aktuális számlám
+  const videoMode = clientRow?.portal_mode === 'video';
+  const baseTabs = videoMode
+    ? TABS.filter((t) => t.key === 'naptar' || t.key === 'csomag').map((t) => (t.key === 'naptar' ? { ...t, label: 'Tartalmak', short: 'Tartalmak' } : t))
+    : TABS;
   return (
     <>
-      {!preview && <TrackView section={active} />}
       {!preview && <TrackView section={active} />}
       <TopBar name={userName} sub={preview ? 'Ügyfélnézet előnézet' : clientName} admin={!!preview} />
       <nav className="portal-nav" aria-label="Ügyfél menü">
         <div className="portal-nav-inner">
-          {[...TABS, ...(showInvoices ? [{ key: 'szamla' as PortalTab, label: 'Aktuális számlám', short: 'Számla', path: '/szamla' }] : [])].map((t) => (
+          {[...baseTabs, ...(showInvoices ? [{ key: 'szamla' as PortalTab, label: 'Aktuális számlám', short: 'Számla', path: '/szamla' }] : [])].map((t) => (
             <Link
               key={t.key}
               href={`${base}${t.path}`}

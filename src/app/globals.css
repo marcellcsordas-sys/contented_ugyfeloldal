@@ -494,3 +494,8 @@ button, input, textarea, select { font-family: inherit; font-size: inherit; }
   .inv-row { grid-template-columns: minmax(0, 1fr) auto; }
   .inv-row .inv-hide-m { display: none; }
 }
+
+/* Videós időbélyeg */
+.tc-chip{display:inline-flex;align-items:center;gap:4px;margin-right:8px;padding:2px 9px;border-radius:999px;border:1px solid rgba(0,85,254,.5);background:rgba(0,85,254,.15);color:#7fa8ff;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;cursor:pointer;line-height:18px}
+.tc-chip:hover{background:rgba(0,85,254,.3);color:#fff}
+.tc-chip.tc-active{background:#0055FE;color:#fff;border-color:#0055FE}

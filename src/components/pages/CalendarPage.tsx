@@ -43,7 +43,7 @@ export default async function CalendarPage({ previewId, m }: { previewId?: strin
         posts={posts}
         mode={ctx.mode}
         basePath={ctx.base}
-        brief={{ month: briefMonth, state: brief?.submitted ? 'done' : brief ? 'draft' : 'none' }}
+        brief={client.portal_mode === 'video' ? undefined : { month: briefMonth, state: brief?.submitted ? 'done' : brief ? 'draft' : 'none' }}
       />
     </PortalShell>
   );

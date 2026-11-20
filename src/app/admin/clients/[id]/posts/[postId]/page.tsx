@@ -15,7 +15,7 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
   const [{ data: client }, { data: post }, { data: comments }] = await Promise.all([
     supabase.from('clients').select('id, name').eq('id', id).maybeSingle(),
     supabase.from('posts').select('*').eq('id', postId).eq('client_id', id).maybeSingle<Post>(),
-    supabase.from('comments').select('id, post_id, author_name, author_role, body, created_at')
+    supabase.from('comments').select('id, post_id, author_name, author_role, body, created_at, timecode')
       .eq('post_id', postId).order('created_at').returns<Comment[]>(),
   ]);
   if (!client || !post) notFound();
@@ -49,7 +49,7 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
                       <span className="tiny secondary">
                         <strong style={{ color: '#fff' }}>{c.author_name}</strong> · {c.author_role === 'admin' ? 'Contented' : 'Ügyfél'} · {formatShortDate(c.created_at)}
                       </span>
-                      <span className="small" style={{ whiteSpace: 'pre-line' }}>{c.body}</span>
+                      <span className="small" style={{ whiteSpace: 'pre-line' }}>{c.timecode != null && <span className="tc-chip">{Math.floor(Number(c.timecode) / 60)}:{String(Math.floor(Number(c.timecode)) % 60).padStart(2, '0')}</span>}{c.body}</span>
                     </div>
                   </div>
                 ))}

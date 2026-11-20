@@ -1,10 +1,15 @@
 'use client';
 
-import { useEffect, useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import type { PostWithMedia } from '@/lib/types';
 import { STATUS, formatPostDate, formatShortDate } from '@/lib/format';
 import { addComment, setPostStatus } from '@/app/portal/actions';
 import PostVisual from './PostVisual';
+
+export function fmtTc(t: number) {
+  const s = Math.max(0, Math.floor(t));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}
 
 export function CloseIcon() {
   return (
@@ -18,7 +23,26 @@ export default function PostDetail({ post, onClose }: { post: PostWithMedia; onC
   const [draft, setDraft] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [tc, setTc] = useState<number | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const actionable = post.status === 'var' || post.status === 'mod';
+  const nativeVideo = !!post.video_src || (post.is_video && /\.(mp4|mov|webm|m4v)$/i.test(post.visual_path ?? ''));
+
+  function markTime() {
+    const v = videoRef.current;
+    if (!v) return;
+    v.pause();
+    setTc(v.currentTime);
+    document.getElementById('komment')?.focus();
+  }
+
+  function seek(t: number) {
+    const v = videoRef.current;
+    if (!v) return;
+    v.currentTime = t;
+    v.play().catch(() => {});
+    v.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -34,7 +58,7 @@ export default function PostDetail({ post, onClose }: { post: PostWithMedia; onC
     setError(null);
     startTransition(async () => {
       const r = await fn();
-      if (r.ok) setDraft('');
+      if (r.ok) { setDraft(''); setTc(null); }
       else setError(r.error ?? 'Hiba történt.');
     });
   }
@@ -62,7 +86,7 @@ export default function PostDetail({ post, onClose }: { post: PostWithMedia; onC
         </div>
 
         <div className="modal-visual">
-          <PostVisual post={post} large />
+          <PostVisual post={post} large videoRef={videoRef} />
         </div>
         <div className="modal-body">
           <div className="row between desktop-only" style={{ alignItems: 'flex-start' }}>
@@ -103,17 +127,31 @@ export default function PostDetail({ post, onClose }: { post: PostWithMedia; onC
                     <strong style={{ color: '#fff', fontWeight: 600 }}>{c.author_name ?? 'Ismeretlen'}</strong>
                     {' · '}{c.author_role === 'admin' ? 'Contented' : 'Ügyfél'}{' · '}{formatShortDate(c.created_at)}
                   </span>
-                  <span className="small" style={{ color: 'rgba(255,255,255,0.78)', whiteSpace: 'pre-line', overflowWrap: 'anywhere' }}>{c.body}</span>
+                  <span className="small" style={{ color: 'rgba(255,255,255,0.78)', whiteSpace: 'pre-line', overflowWrap: 'anywhere' }}>
+                    {c.timecode != null && (
+                      <button type="button" className="tc-chip" onClick={() => seek(Number(c.timecode))} title="Ugrás erre a pontra">{fmtTc(Number(c.timecode))}</button>
+                    )}
+                    {c.body}
+                  </span>
                 </div>
               </div>
             ))}
-            <label htmlFor="komment" className="tiny muted" style={{ marginTop: 6 }}>Új komment</label>
+            <div className="row between" style={{ marginTop: 6, flexWrap: 'wrap', gap: 8 }}>
+              <label htmlFor="komment" className="tiny muted">Új komment</label>
+              {nativeVideo && (
+                tc != null ? (
+                  <button type="button" className="tc-chip tc-active" onClick={() => setTc(null)} title="Időpont törlése">{fmtTc(tc)} ×</button>
+                ) : (
+                  <button type="button" className="btn btn-ghost btn-sm" onClick={markTime}>Megjegyzés ehhez a ponthoz</button>
+                )
+              )}
+            </div>
             <textarea
               id="komment"
               className="textarea"
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              placeholder="Pl. a második bekezdésből vegyük ki az árat."
+              placeholder={nativeVideo ? (tc != null ? `Mi legyen másképp ${fmtTc(tc)}-nál?` : 'Állítsd meg a videót ott, ahol változtatnál, és nyomd meg a „Megjegyzés ehhez a ponthoz” gombot.') : 'Pl. a második bekezdésből vegyük ki az árat.'}
             />
           </div>
 
@@ -126,24 +164,24 @@ export default function PostDetail({ post, onClose }: { post: PostWithMedia; onC
               <>
                 <div className="row" style={{ flexWrap: 'nowrap' }}>
                   <button className="btn btn-light" style={{ flex: '1 1 0' }} disabled={pending}
-                    onClick={() => run(() => setPostStatus(post.id, 'ok', draft))}>
+                    onClick={() => run(() => setPostStatus(post.id, 'ok', draft, tc))}>
                     Elfogadom
                   </button>
                   <button className="btn btn-ghost" style={{ flex: '1 1 0' }} disabled={pending}
-                    onClick={() => run(() => setPostStatus(post.id, 'mod', draft))}>
+                    onClick={() => run(() => setPostStatus(post.id, 'mod', draft, tc))}>
                     Módosítást kérek
                   </button>
                 </div>
                 {draft.trim() && (
                   <button className="btn btn-ghost btn-sm" disabled={pending}
-                    onClick={() => run(() => addComment(post.id, draft))}>
+                    onClick={() => run(() => addComment(post.id, draft, tc))}>
                     Csak kommentet küldök
                   </button>
                 )}
               </>
             ) : (
               <button className="btn btn-ghost" style={{ width: '100%' }} disabled={pending || !draft.trim()}
-                onClick={() => run(() => addComment(post.id, draft))}>
+                onClick={() => run(() => addComment(post.id, draft, tc))}>
                 Komment küldése
               </button>
             )}

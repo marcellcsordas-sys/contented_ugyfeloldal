@@ -6,6 +6,7 @@ export type Client = {
   contact_name: string | null;
   created_at: string;
   billingo_partner_id?: number | null;
+  portal_mode?: string | null;
   ad_invoices_url?: string | null;
 };
 
@@ -66,6 +67,7 @@ export type Comment = {
   author_role: 'admin' | 'client' | null;
   body: string;
   created_at: string;
+  timecode?: number | null;
 };
 
 export type PostWithMedia = Post & { visual_url: string | null; video_src: string | null; comments: Comment[] };

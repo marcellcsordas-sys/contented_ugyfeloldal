@@ -23,7 +23,7 @@ export async function loadMonthPosts(supabase: Supa, clientId: string, month: st
   const { data: comments } = ids.length
     ? await supabase
         .from('comments')
-        .select('id, post_id, author_name, author_role, body, created_at')
+        .select('id, post_id, author_name, author_role, body, created_at, timecode')
         .in('post_id', ids)
         .order('created_at', { ascending: true })
         .returns<Comment[]>()
