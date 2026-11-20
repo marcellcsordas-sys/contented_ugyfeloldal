@@ -25,6 +25,7 @@ type Props = {
   mode: 'client' | 'preview';
   basePath?: string;
   brief?: { month: string; state: 'none' | 'draft' | 'done' };
+  videoMode?: boolean;
 };
 
 function CommentIcon() {
@@ -97,23 +98,27 @@ export default function PortalView(props: Props) {
         <section className="split-main" aria-label="Havi tartalmak">
           <div className="row between" style={{ alignItems: 'flex-end', gap: 18 }}>
             <div className="stack" style={{ gap: 10 }}>
-              <div className="row month-row">
-                <Link className="chip month-nav" href={`${basePath}?m=${shiftMonth(month, -1)}`} aria-label="Előző hónap">‹</Link>
-                <span className="eyebrow"><span className="hide-mobile">Tartalomnaptár · </span>{ml.full}</span>
-                <Link className="chip month-nav" href={`${basePath}?m=${shiftMonth(month, 1)}`} aria-label="Következő hónap">›</Link>
-              </div>
+              {props.videoMode ? (
+                <span className="eyebrow">Videóid</span>
+              ) : (
+                <div className="row month-row">
+                  <Link className="chip month-nav" href={`${basePath}?m=${shiftMonth(month, -1)}`} aria-label="Előző hónap">‹</Link>
+                  <span className="eyebrow"><span className="hide-mobile">Tartalomnaptár · </span>{ml.full}</span>
+                  <Link className="chip month-nav" href={`${basePath}?m=${shiftMonth(month, 1)}`} aria-label="Következő hónap">›</Link>
+                </div>
+              )}
               <h1 className="h1">
-                {capitalize(ml.name)}. {posts.length} tartalom.
+                {props.videoMode ? `${posts.length} videó.` : `${capitalize(ml.name)}. ${posts.length} tartalom.`}
                 <span className="second">
                   {posts.length === 0
-                    ? 'Ebben a hónapban még nincs feltöltve.'
+                    ? (props.videoMode ? 'Hamarosan feltöltjük.' : 'Ebben a hónapban még nincs feltöltve.')
                     : waiting > 0
                       ? `${waiting} vár a jóváhagyásodra.`
                       : 'Mindent átnéztél.'}
                 </span>
               </h1>
             </div>
-            {mode === 'client' && waiting > 0 && (
+            {mode === 'client' && waiting > 0 && !props.videoMode && (
               <button className="btn btn-light approve-all" onClick={onApproveAll} disabled={pending}>
                 <CheckIcon />
                 Mind a {waiting} tartalmat elfogadom
@@ -201,7 +206,7 @@ export default function PortalView(props: Props) {
           {pkg && usage.length > 0 && (
             <div className="card stack">
               <div className="row between">
-                <span className="eyebrow">Felhasználás · {ml.name}</span>
+                <span className="eyebrow">{props.videoMode ? 'Felhasználás · forgatás' : `Felhasználás · ${ml.name}`}</span>
                 <Link href={`${basePath}/csomag`} className="tiny muted">Csomagom</Link>
               </div>
               <UsageList rows={usage} />

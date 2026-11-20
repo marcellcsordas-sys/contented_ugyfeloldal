@@ -6,14 +6,17 @@ import type { Comment, Post, PostWithMedia } from './types';
 type Supa = Awaited<ReturnType<typeof createClient>>;
 
 // Egy ügyfél egy hónapjának posztjai, kommentekkel és aláírt média-linkekkel.
-export async function loadMonthPosts(supabase: Supa, clientId: string, month: string): Promise<PostWithMedia[]> {
-  const { start, end } = monthRange(month);
-  const { data: posts } = await supabase
+// month = null: minden poszt (videós mód, ahol egy forgatás anyaga több hónapra szól).
+export async function loadMonthPosts(supabase: Supa, clientId: string, month: string | null): Promise<PostWithMedia[]> {
+  let q = supabase
     .from('posts')
     .select('*')
-    .eq('client_id', clientId)
-    .gte('publish_date', start)
-    .lt('publish_date', end)
+    .eq('client_id', clientId);
+  if (month) {
+    const { start, end } = monthRange(month);
+    q = q.gte('publish_date', start).lt('publish_date', end);
+  }
+  const { data: posts } = await q
     .order('publish_date', { ascending: true })
     .order('number', { ascending: true })
     .returns<Post[]>();

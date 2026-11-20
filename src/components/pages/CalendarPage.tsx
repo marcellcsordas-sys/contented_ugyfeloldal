@@ -19,7 +19,7 @@ export default async function CalendarPage({ previewId, m }: { previewId?: strin
     supabase.from('offer_requests').select('offer_id').eq('client_id', clientId),
     supabase.from('monthly_inputs').select('submitted').eq('client_id', clientId).eq('month', `${briefMonth}-01`)
       .maybeSingle<{ submitted: boolean }>(),
-    loadMonthPosts(supabase, clientId, month),
+    loadMonthPosts(supabase, clientId, client.portal_mode === 'video' ? null : month),
   ]);
   const requested = new Set((requests ?? []).map((r: { offer_id: string }) => r.offer_id));
 
@@ -41,6 +41,7 @@ export default async function CalendarPage({ previewId, m }: { previewId?: strin
         offer={offer ?? null}
         offerRequested={offer ? requested.has(offer.id) : false}
         posts={posts}
+        videoMode={client.portal_mode === 'video'}
         mode={ctx.mode}
         basePath={ctx.base}
         brief={client.portal_mode === 'video' ? undefined : { month: briefMonth, state: brief?.submitted ? 'done' : brief ? 'draft' : 'none' }}
