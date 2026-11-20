@@ -1,5 +1,6 @@
 import { requireAdmin, signPaths } from '@/lib/session';
 import PosterMaker from '@/components/admin/PosterMaker';
+import UploadBox from '@/components/admin/UploadBox';
 
 // Nézőkép generálása azokhoz a videókhoz, amelyekhez még nincs kép.
 export default async function PostersPage({ params }: { params: Promise<{ id: string }> }) {
@@ -19,6 +20,7 @@ export default async function PostersPage({ params }: { params: Promise<{ id: st
     <div className="wrap stack" style={{ gap: 18, paddingTop: 32 }}>
       <h1 className="h1">Nézőképek</h1>
       <PosterMaker clientId={id} items={items} />
+      <UploadBox clientId={id} />
     </div>
   );
 }
