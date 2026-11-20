@@ -151,7 +151,7 @@ export default function PostDetail({ post, onClose }: { post: PostWithMedia; onC
               className="textarea"
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              placeholder={nativeVideo ? (tc != null ? `Mi legyen másképp ${fmtTc(tc)}-nál?` : 'Állítsd meg a videót ott, ahol változtatnál, és nyomd meg a „Megjegyzés ehhez a ponthoz” gombot.') : 'Pl. a második bekezdésből vegyük ki az árat.'}
+              placeholder={nativeVideo ? (tc != null ? `Mi legyen másképp ${fmtTc(tc)}-nál?` : 'Állítsd meg a videót ott, ahol változtatnál, és nyomd meg a „Megjegyzés ehhez a ponthoz” gombot.') : post.is_video ? 'Pl. 0:12-nél vegyük ki ezt a mondatot, vagy cseréljük a zenét.' : 'Pl. a második bekezdésből vegyük ki az árat.'}
             />
           </div>
 
