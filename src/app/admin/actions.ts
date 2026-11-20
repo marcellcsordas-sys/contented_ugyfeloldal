@@ -356,3 +356,13 @@ export async function deleteAdReport(clientId: string, month: string, platform: 
   revalidatePath('/portal', 'layout');
   return { ok: true };
 }
+
+// Automatikusan generált nézőkép mentése egy videós poszthoz.
+export async function setPostVisual(postId: string, path: string): Promise<Result> {
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase.from('posts').update({ visual_path: path }).eq('id', postId).is('visual_path', null);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath('/admin', 'layout');
+  revalidatePath('/portal');
+  return { ok: true };
+}
