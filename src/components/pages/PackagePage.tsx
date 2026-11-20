@@ -78,7 +78,7 @@ export default async function PackagePage({ previewId }: { previewId?: string; m
                   <span className="eyebrow">Felhasználás · {ml.name}</span>
                   <UsageList rows={usage} />
                   <span className="tiny muted">
-                    A módosítási kör havi szinten számít: egy körben az összes posztra jelezheted a kéréseidet.
+                    A módosítási kör havi szinten számít: egy körben az összes {pkg.posts_quota === 0 ? 'videóra' : 'posztra'} jelezheted a kéréseidet.
                   </span>
                 </div>
               )}
