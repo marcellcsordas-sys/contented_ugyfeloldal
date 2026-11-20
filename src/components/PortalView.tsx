@@ -205,9 +205,11 @@ export default function PortalView(props: Props) {
                 <Link href={`${basePath}/csomag`} className="tiny muted">Csomagom</Link>
               </div>
               <UsageList rows={usage} />
-              <span className="tiny muted">
-                Havonta 1 módosítási kör jár: ebben az összes posztra egyszerre jelezheted, mit változtassunk.
-              </span>
+              {pkg.revisions_quota > 0 && (
+                <span className="tiny muted">
+                  Havonta {pkg.revisions_quota} módosítási kör jár: ebben az összes {pkg.posts_quota === 0 ? 'videóra' : 'posztra'} egyszerre jelezheted, mit változtassunk.
+                </span>
+              )}
             </div>
           )}
 
