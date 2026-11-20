@@ -7,7 +7,7 @@ type Member = { id: string; full_name: string; email: string; pending: boolean; 
 type Cred = { email: string; password: string; name: string };
 
 // Ügyfél-hozzáférések kezelése: több ember egy ügyfélhez, e-mail + ideiglenes jelszó.
-export default function ClientAccess({ clientId, clientName, members }: { clientId: string; clientName: string; members: Member[] }) {
+export default function ClientAccess({ clientId, clientName, members, videoMode = false }: { clientId: string; clientName: string; members: Member[]; videoMode?: boolean }) {
   const [cred, setCred] = useState<Cred | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [confirmDel, setConfirmDel] = useState<string | null>(null);
@@ -15,7 +15,7 @@ export default function ClientAccess({ clientId, clientName, members }: { client
   const [pending, start] = useTransition();
 
   const message = cred
-    ? `Szia ${cred.name}!\n\nItt a belépésed a Contented ügyfélfelületére, ahol a ${clientName} tartalomnaptárát, hirdetési eredményeit, havi tervezőjét és csomagját látod.\n\nCím: https://ugyfel.contented.hu\nE-mail: ${cred.email}\nIdeiglenes jelszó: ${cred.password}\n\nAz első belépéskor kérni fogja, hogy állíts be saját jelszót.\n\nÜdv,\nMarci`
+    ? `Szia ${cred.name}!\n\nItt a belépésed a Contented ügyfélfelületére, ${videoMode ? `ahol a ${clientName} videóit egy helyen látod és hagyod jóvá. Ha valamin változtatnál, állítsd meg a videót az adott pontnál, és írd meg ott a megjegyzésed. Itt látod a csomagodat és az aktuális számládat is.` : `ahol a ${clientName} tartalomnaptárát, hirdetési eredményeit, havi tervezőjét és csomagját látod.`}\n\nCím: https://ugyfel.contented.hu\nE-mail: ${cred.email}\nIdeiglenes jelszó: ${cred.password}\n\nAz első belépéskor kérni fogja, hogy állíts be saját jelszót.\n\nÜdv,\nMarci`
     : '';
 
   return (

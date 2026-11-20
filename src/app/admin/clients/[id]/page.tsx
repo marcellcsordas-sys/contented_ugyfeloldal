@@ -226,7 +226,7 @@ export default async function ClientAdminPage({
               <div className="field"><label htmlFor="p-contract">Szerződés</label><input id="p-contract" name="contract_note" className="input" placeholder="Határozatlan idejű, 30 napos felmondással." defaultValue={pkg?.contract_note ?? ''} /></div>
             </ActionForm>
 
-            <ClientAccess clientId={id} clientName={client.name} members={access} />
+            <ClientAccess clientId={id} clientName={client.name} members={access} videoMode={client.portal_mode === 'video'} />
             <ActivityCard rows={activity ?? []} names={names} />
             <BillingForm clientId={id} clientName={client.name} partnerId={client.billingo_partner_id ?? null} driveUrl={client.ad_invoices_url ?? null} configured={billingoConfigured()} />
           </aside>
