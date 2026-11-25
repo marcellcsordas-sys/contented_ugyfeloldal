@@ -48,6 +48,12 @@ export function normalizeMonth(m?: string | null) {
   return m && /^\d{4}-\d{2}$/.test(m) ? m : currentMonthKey();
 }
 
+// Ügyfél naptár alapnézete: a hónap 20-ától (tervező határideje) már a következő hónap.
+export function defaultCalendarMonth() {
+  const now = new Date();
+  return now.getDate() >= 20 ? shiftMonth(currentMonthKey(), 1) : currentMonthKey();
+}
+
 export function monthRange(key: string) {
   const [y, m] = key.split('-').map(Number);
   const start = `${y}-${String(m).padStart(2, '0')}-01`;

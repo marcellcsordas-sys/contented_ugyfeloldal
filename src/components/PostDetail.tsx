@@ -19,7 +19,19 @@ export function CloseIcon() {
   );
 }
 
-export default function PostDetail({ post, onClose }: { post: PostWithMedia; onClose: () => void }) {
+type Nav = { index: number; total: number; onPrev?: () => void; onNext?: () => void };
+
+function PostNav({ nav }: { nav: Nav }) {
+  return (
+    <div className="post-nav" role="group" aria-label="Lapozás a tartalmak között">
+      <button className="btn btn-ghost icon-btn" onClick={nav.onPrev} disabled={!nav.onPrev} aria-label="Előző tartalom">‹</button>
+      <span className="tiny secondary post-nav-count">{nav.index + 1} / {nav.total}</span>
+      <button className="btn btn-ghost icon-btn" onClick={nav.onNext} disabled={!nav.onNext} aria-label="Következő tartalom">›</button>
+    </div>
+  );
+}
+
+export default function PostDetail({ post, onClose, nav }: { post: PostWithMedia; onClose: () => void; nav?: Nav }) {
   const [draft, setDraft] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -45,14 +57,20 @@ export default function PostDetail({ post, onClose }: { post: PostWithMedia; onC
   }
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+      const typing = (e.target as HTMLElement | null)?.closest?.('textarea, input');
+      if (typing) return;
+      if (e.key === 'ArrowLeft') nav?.onPrev?.();
+      if (e.key === 'ArrowRight') nav?.onNext?.();
+    };
     window.addEventListener('keydown', onKey);
     document.body.style.overflow = 'hidden';
     return () => {
       window.removeEventListener('keydown', onKey);
       document.body.style.overflow = '';
     };
-  }, [onClose]);
+  }, [onClose, nav]);
 
   function run(fn: () => Promise<{ ok: boolean; error?: string }>) {
     setError(null);
@@ -80,6 +98,7 @@ export default function PostDetail({ post, onClose }: { post: PostWithMedia; onC
             <span className="sheet-date">{formatPostDate(post.publish_date)}</span>
           </div>
           <div className="row" style={{ flexWrap: 'nowrap' }}>
+            {nav && <PostNav nav={nav} />}
             <span className={`pill ${STATUS[post.status].cls}`}>{STATUS[post.status].label}</span>
             <button className="btn btn-ghost icon-btn" onClick={onClose} aria-label="Bezárás"><CloseIcon /></button>
           </div>
@@ -97,6 +116,7 @@ export default function PostDetail({ post, onClose }: { post: PostWithMedia; onC
               <span style={{ fontSize: 22, fontWeight: 500, letterSpacing: -0.5 }}>{formatPostDate(post.publish_date)}</span>
             </div>
             <div className="row">
+              {nav && <PostNav nav={nav} />}
               <span className={`pill ${STATUS[post.status].cls}`}>{STATUS[post.status].label}</span>
               <button className="btn btn-ghost icon-btn" onClick={onClose} aria-label="Bezárás"><CloseIcon /></button>
             </div>

@@ -499,3 +499,9 @@ button, input, textarea, select { font-family: inherit; font-size: inherit; }
 .tc-chip{display:inline-flex;align-items:center;gap:4px;margin-right:8px;padding:2px 9px;border-radius:999px;border:1px solid rgba(0,85,254,.5);background:rgba(0,85,254,.15);color:#7fa8ff;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;cursor:pointer;line-height:18px}
 .tc-chip:hover{background:rgba(0,85,254,.3);color:#fff}
 .tc-chip.tc-active{background:#0055FE;color:#fff;border-color:#0055FE}
+
+/* Lapozás a tartalom részleteiben */
+.post-nav{display:inline-flex;align-items:center;gap:2px;border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:2px}
+.post-nav .icon-btn{border:0;font-size:20px;line-height:1;width:34px;height:34px}
+.post-nav .icon-btn:disabled{opacity:.3;cursor:default}
+.post-nav-count{min-width:38px;text-align:center;font-variant-numeric:tabular-nums}

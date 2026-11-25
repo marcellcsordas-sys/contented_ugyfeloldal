@@ -1,5 +1,5 @@
 import { loadMonthPosts } from '@/lib/load';
-import { currentMonthKey, normalizeMonth, shiftMonth } from '@/lib/format';
+import { currentMonthKey, defaultCalendarMonth, normalizeMonth, shiftMonth } from '@/lib/format';
 import { getPortalCtx } from '@/lib/portal';
 import type { Offer, Package } from '@/lib/types';
 import PortalView from '@/components/PortalView';
@@ -9,7 +9,7 @@ export default async function CalendarPage({ previewId, m }: { previewId?: strin
   const ctx = await getPortalCtx(previewId);
   if (!ctx) return <NoClient userName="" />;
   const { supabase, clientId, client } = ctx;
-  const month = normalizeMonth(m);
+  const month = m ? normalizeMonth(m) : defaultCalendarMonth();
   const briefMonth = shiftMonth(currentMonthKey(), 1);
 
   const [{ data: pkg }, { data: offer }, { data: requests }, { data: brief }, posts] = await Promise.all([

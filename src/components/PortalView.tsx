@@ -236,7 +236,22 @@ export default function PortalView(props: Props) {
         </aside>
       </div>
 
-      {open && <PostDetail post={open} onClose={() => setOpenId(null)} />}
+      {open && (() => {
+        const i = visible.findIndex((p) => p.id === open.id);
+        return (
+          <PostDetail
+            key={open.id}
+            post={open}
+            onClose={() => setOpenId(null)}
+            nav={i >= 0 && visible.length > 1 ? {
+              index: i,
+              total: visible.length,
+              onPrev: i > 0 ? () => setOpenId(visible[i - 1].id) : undefined,
+              onNext: i < visible.length - 1 ? () => setOpenId(visible[i + 1].id) : undefined,
+            } : undefined}
+          />
+        );
+      })()}
 
       {offerOpen && offer && !offerSent && (
         <OfferModal
