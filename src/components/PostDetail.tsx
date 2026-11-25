@@ -83,7 +83,7 @@ export default function PostDetail({ post, onClose, nav }: { post: PostWithMedia
 
   const lockedText =
     post.status === 'ok' ? 'Ezt már elfogadtad. Kommentet még írhatsz.'
-    : post.status === 'keszul' ? 'Még készül. Ha van ötleted, írd meg kommentben.'
+    : post.status === 'keszul' ? 'Ha így jó, fogadd el. Ha van ötleted, írd meg kommentben.'
     : 'Már kint van. Kommentet még írhatsz.';
 
   return (
@@ -199,6 +199,17 @@ export default function PostDetail({ post, onClose, nav }: { post: PostWithMedia
                   </button>
                 )}
               </>
+            ) : post.status === 'keszul' ? (
+              <div className="row" style={{ flexWrap: 'nowrap' }}>
+                <button className="btn btn-light" style={{ flex: '1 1 0' }} disabled={pending}
+                  onClick={() => run(() => setPostStatus(post.id, 'ok', draft, tc))}>
+                  Elfogadom
+                </button>
+                <button className="btn btn-ghost" style={{ flex: '1 1 0' }} disabled={pending || !draft.trim()}
+                  onClick={() => run(() => addComment(post.id, draft, tc))}>
+                  Komment küldése
+                </button>
+              </div>
             ) : (
               <button className="btn btn-ghost" style={{ width: '100%' }} disabled={pending || !draft.trim()}
                 onClick={() => run(() => addComment(post.id, draft, tc))}>
