@@ -113,3 +113,14 @@ export async function saveBrief(
   }
   return { ok: true };
 }
+
+// Ügyfél javasolt posztszövege: az eredeti megmarad, a beírt rész pirossal látszik
+export async function suggestCaption(postId: string, text: string): Promise<Result> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc('client_suggest_caption', { p_post: postId, p_text: text.replace(/\r\n/g, '\n') });
+  if (error) return { ok: false, error: error.message };
+  await log(supabase, 'poszt', `Szöveget módosított: ${await postLabel(supabase, postId)}`);
+  revalidatePath('/portal');
+  revalidatePath('/admin', 'layout');
+  return { ok: true };
+}

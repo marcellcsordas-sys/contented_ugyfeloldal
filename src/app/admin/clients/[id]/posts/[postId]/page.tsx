@@ -7,6 +7,7 @@ import TopBar from '@/components/TopBar';
 import PostForm from '@/components/admin/PostForm';
 import PostVisual from '@/components/PostVisual';
 import AdminComment from '@/components/admin/AdminComment';
+import CaptionSuggestion from '@/components/admin/CaptionSuggestion';
 
 export default async function EditPostPage({ params }: { params: Promise<{ id: string; postId: string }> }) {
   const { id, postId } = await params;
@@ -39,6 +40,9 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
               <div className="card" style={{ padding: 6 }}>
                 <PostVisual post={withMedia} large />
               </div>
+              {post.caption_suggestion != null && post.caption_suggestion !== post.caption && (
+                <CaptionSuggestion postId={post.id} caption={post.caption} suggestion={post.caption_suggestion} by={post.caption_suggested_by ?? null} />
+              )}
               <div className="card stack">
                 <span className="eyebrow">Kommentek</span>
                 {(comments ?? []).length === 0 && <span className="small muted">Még nincs komment.</span>}

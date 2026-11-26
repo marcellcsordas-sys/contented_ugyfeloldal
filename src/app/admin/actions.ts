@@ -366,3 +366,17 @@ export async function setPostVisual(postId: string, path: string): Promise<Resul
   revalidatePath('/portal');
   return { ok: true };
 }
+
+// Ügyfél szövegjavaslatának elfogadása (bekerül a posztszövegbe) vagy elvetése
+export async function resolveCaptionSuggestion(postId: string, accept: boolean): Promise<Result> {
+  const { supabase } = await requireAdmin();
+  const { data: post } = await supabase.from('posts').select('caption_suggestion').eq('id', postId).maybeSingle();
+  if (!post) return { ok: false, error: 'Nincs ilyen poszt.' };
+  const patch: Record<string, unknown> = { caption_suggestion: null, caption_suggested_by: null, caption_suggested_at: null };
+  if (accept && post.caption_suggestion != null) patch.caption = post.caption_suggestion;
+  const { error } = await supabase.from('posts').update(patch).eq('id', postId);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath('/admin', 'layout');
+  revalidatePath('/portal');
+  return { ok: true };
+}

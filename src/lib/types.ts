@@ -53,6 +53,9 @@ export type Post = {
   visual_path: string | null;
   visual_headline: string | null;
   caption: string;
+  caption_suggestion?: string | null;
+  caption_suggested_by?: string | null;
+  caption_suggested_at?: string | null;
   internal_note: string | null;
   video_url: string | null;
   video_path: string | null;

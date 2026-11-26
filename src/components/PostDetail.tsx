@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState, useTransition } from 'react';
 import type { PostWithMedia } from '@/lib/types';
 import { STATUS, formatPostDate, formatShortDate } from '@/lib/format';
-import { addComment, setPostStatus } from '@/app/portal/actions';
+import { addComment, setPostStatus, suggestCaption } from '@/app/portal/actions';
+import CaptionDiff from './CaptionDiff';
 import { createClient } from '@/lib/supabase/browser';
 import PostVisual from './PostVisual';
 
@@ -37,6 +38,23 @@ export default function PostDetail({ post, onClose, nav }: { post: PostWithMedia
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [tc, setTc] = useState<number | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [capDraft, setCapDraft] = useState('');
+  const canEditCaption = post.status !== 'pub' && !!post.caption;
+  const hasSuggestion = post.caption_suggestion != null && post.caption_suggestion !== post.caption;
+
+  function startEdit() {
+    setCapDraft(post.caption_suggestion ?? post.caption);
+    setEditing(true);
+  }
+  function saveCaption() {
+    setError(null);
+    startTransition(async () => {
+      const r = await suggestCaption(post.id, capDraft);
+      if (r.ok) setEditing(false);
+      else setError(r.error ?? 'Hiba történt.');
+    });
+  }
   const [files, setFiles] = useState<{ file: File; url: string }[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
   const hasInput = !!draft.trim() || files.length > 0;
@@ -160,8 +178,31 @@ export default function PostDetail({ post, onClose, nav }: { post: PostWithMedia
           </div>
 
           <div className="stack" style={{ gap: 8 }}>
-            <span className="eyebrow">Poszt szöveg</span>
-            <p className="caption">{post.caption || 'A szöveg készül.'}</p>
+            <div className="row between" style={{ gap: 8, flexWrap: 'wrap' }}>
+              <span className="eyebrow">Poszt szöveg</span>
+              {canEditCaption && !editing && (
+                <button type="button" className="btn btn-ghost btn-sm" onClick={startEdit}>
+                  {hasSuggestion ? 'Javításaim szerkesztése' : 'Beleírok a szövegbe'}
+                </button>
+              )}
+            </div>
+            {editing ? (
+              <div className="stack" style={{ gap: 8 }}>
+                <textarea className="textarea caption-edit" value={capDraft} onChange={(e) => setCapDraft(e.target.value)} rows={8} aria-label="Posztszöveg szerkesztése" />
+                <span className="tiny muted">Írd át úgy, ahogy szeretnéd. Az eredeti szöveg megmarad, a te javításaid pirossal látszanak.</span>
+                <div className="row" style={{ flexWrap: 'nowrap' }}>
+                  <button type="button" className="btn btn-light btn-sm" disabled={pending} onClick={saveCaption}>Javítás mentése</button>
+                  <button type="button" className="btn btn-ghost btn-sm" disabled={pending} onClick={() => setEditing(false)}>Mégse</button>
+                </div>
+              </div>
+            ) : hasSuggestion ? (
+              <>
+                <CaptionDiff caption={post.caption} suggestion={post.caption_suggestion!} />
+                <span className="tiny muted"><span className="sugg-add">Pirossal</span> a javasolt módosítás{post.caption_suggested_by ? ` (${post.caption_suggested_by})` : ''}.</span>
+              </>
+            ) : (
+              <p className="caption">{post.caption || 'A szöveg készül.'}</p>
+            )}
           </div>
 
           {post.internal_note && (
