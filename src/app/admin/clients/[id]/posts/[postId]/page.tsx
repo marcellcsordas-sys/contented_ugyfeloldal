@@ -15,12 +15,12 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
   const [{ data: client }, { data: post }, { data: comments }] = await Promise.all([
     supabase.from('clients').select('id, name').eq('id', id).maybeSingle(),
     supabase.from('posts').select('*').eq('id', postId).eq('client_id', id).maybeSingle<Post>(),
-    supabase.from('comments').select('id, post_id, author_name, author_role, body, created_at, timecode')
+    supabase.from('comments').select('id, post_id, author_name, author_role, body, created_at, timecode, attachments')
       .eq('post_id', postId).order('created_at').returns<Comment[]>(),
   ]);
   if (!client || !post) notFound();
 
-  const urls = await signPaths(supabase, [post.visual_path, post.video_path].filter((x): x is string => !!x));
+  const urls = await signPaths(supabase, [post.visual_path, post.video_path, ...(comments ?? []).flatMap((c) => c.attachments ?? [])].filter((x): x is string => !!x));
   const withMedia = { ...post, visual_url: post.visual_path ? urls.get(post.visual_path) ?? null : null, video_src: post.video_path ? urls.get(post.video_path) ?? null : null, comments: comments ?? [] };
   const month = post.publish_date.slice(0, 7);
 
@@ -50,6 +50,16 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
                         <strong style={{ color: '#fff' }}>{c.author_name}</strong> · {c.author_role === 'admin' ? 'Contented' : 'Ügyfél'} · {formatShortDate(c.created_at)}
                       </span>
                       <span className="small" style={{ whiteSpace: 'pre-line' }}>{c.timecode != null && <span className="tc-chip">{Math.floor(Number(c.timecode) / 60)}:{String(Math.floor(Number(c.timecode)) % 60).padStart(2, '0')}</span>}{c.body}</span>
+                      {(c.attachments?.length ?? 0) > 0 && (
+                        <div className="att-row">
+                          {c.attachments!.map((a, i) => urls.get(a) && (
+                            <a key={i} href={urls.get(a)} target="_blank" rel="noreferrer" className="att-thumb">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={urls.get(a)} alt={`Csatolt kép ${i + 1}`} />
+                            </a>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}

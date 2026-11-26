@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useTransition } from 'react';
 import type { PostWithMedia } from '@/lib/types';
 import { STATUS, formatPostDate, formatShortDate } from '@/lib/format';
 import { addComment, setPostStatus } from '@/app/portal/actions';
+import { createClient } from '@/lib/supabase/browser';
 import PostVisual from './PostVisual';
 
 export function fmtTc(t: number) {
@@ -36,6 +37,37 @@ export default function PostDetail({ post, onClose, nav }: { post: PostWithMedia
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [tc, setTc] = useState<number | null>(null);
+  const [files, setFiles] = useState<{ file: File; url: string }[]>([]);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const hasInput = !!draft.trim() || files.length > 0;
+
+  function addFiles(list: FileList | null) {
+    if (!list) return;
+    setError(null);
+    const picked = Array.from(list).filter((f) => f.type.startsWith('image/'));
+    const tooBig = picked.find((f) => f.size > 10 * 1024 * 1024);
+    if (tooBig) { setError(`${tooBig.name}: legfeljebb 10 MB lehet egy kép.`); return; }
+    setFiles((cur) => {
+      const next = [...cur, ...picked.map((f) => ({ file: f, url: URL.createObjectURL(f) }))];
+      if (next.length > 3) setError('Legfeljebb 3 képet csatolhatsz.');
+      return next.slice(0, 3);
+    });
+    if (fileRef.current) fileRef.current.value = '';
+  }
+
+  async function uploadFiles(): Promise<string[]> {
+    if (files.length === 0) return [];
+    const supabase = createClient();
+    const paths: string[] = [];
+    for (const { file } of files) {
+      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+      const path = `${post.client_id}/comments/${crypto.randomUUID()}.${ext}`;
+      const { error } = await supabase.storage.from('media').upload(path, file, { contentType: file.type });
+      if (error) throw new Error(`Képfeltöltési hiba: ${error.message}`);
+      paths.push(path);
+    }
+    return paths;
+  }
   const videoRef = useRef<HTMLVideoElement>(null);
   const actionable = post.status === 'var' || post.status === 'mod';
   const nativeVideo = !!post.video_src || (post.is_video && /\.(mp4|mov|webm|m4v)$/i.test(post.visual_path ?? ''));
@@ -72,12 +104,17 @@ export default function PostDetail({ post, onClose, nav }: { post: PostWithMedia
     };
   }, [onClose, nav]);
 
-  function run(fn: () => Promise<{ ok: boolean; error?: string }>) {
+  function run(fn: (attachments: string[]) => Promise<{ ok: boolean; error?: string }>) {
     setError(null);
     startTransition(async () => {
-      const r = await fn();
-      if (r.ok) { setDraft(''); setTc(null); }
-      else setError(r.error ?? 'Hiba történt.');
+      try {
+        const attachments = await uploadFiles();
+        const r = await fn(attachments);
+        if (r.ok) { setDraft(''); setTc(null); setFiles([]); }
+        else setError(r.error ?? 'Hiba történt.');
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Hiba történt.');
+      }
     });
   }
 
@@ -153,6 +190,16 @@ export default function PostDetail({ post, onClose, nav }: { post: PostWithMedia
                     )}
                     {c.body}
                   </span>
+                  {(c.attachment_urls?.length ?? 0) > 0 && (
+                    <div className="att-row">
+                      {c.attachment_urls!.map((u, i) => (
+                        <a key={i} href={u} target="_blank" rel="noreferrer" className="att-thumb" title="Megnyitás nagyban">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={u} alt={`Csatolt kép ${i + 1}`} />
+                        </a>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -173,6 +220,21 @@ export default function PostDetail({ post, onClose, nav }: { post: PostWithMedia
               onChange={(e) => setDraft(e.target.value)}
               placeholder={nativeVideo ? (tc != null ? `Mi legyen másképp ${fmtTc(tc)}-nál?` : 'Állítsd meg a videót ott, ahol változtatnál, és nyomd meg a „Megjegyzés ehhez a ponthoz” gombot.') : post.is_video ? 'Pl. 0:12-nél vegyük ki ezt a mondatot, vagy cseréljük a zenét.' : 'Pl. a második bekezdésből vegyük ki az árat.'}
             />
+            <div className="att-bar">
+              {files.map((f, i) => (
+                <span key={f.url} className="att-thumb att-pending">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={f.url} alt={f.file.name} />
+                  <button type="button" aria-label="Kép eltávolítása" onClick={() => setFiles((cur) => cur.filter((_, j) => j !== i))}>×</button>
+                </span>
+              ))}
+              {files.length < 3 && (
+                <button type="button" className="btn btn-ghost btn-sm" onClick={() => fileRef.current?.click()} disabled={pending}>
+                  + Kép csatolása{files.length > 0 ? ` (${files.length}/3)` : ''}
+                </button>
+              )}
+              <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(e) => addFiles(e.target.files)} />
+            </div>
           </div>
 
           {!actionable && <span className="small muted">{lockedText}</span>}
@@ -184,17 +246,17 @@ export default function PostDetail({ post, onClose, nav }: { post: PostWithMedia
               <>
                 <div className="row" style={{ flexWrap: 'nowrap' }}>
                   <button className="btn btn-light" style={{ flex: '1 1 0' }} disabled={pending}
-                    onClick={() => run(() => setPostStatus(post.id, 'ok', draft, tc))}>
+                    onClick={() => run((a) => setPostStatus(post.id, 'ok', draft, tc, a))}>
                     Elfogadom
                   </button>
                   <button className="btn btn-ghost" style={{ flex: '1 1 0' }} disabled={pending}
-                    onClick={() => run(() => setPostStatus(post.id, 'mod', draft, tc))}>
+                    onClick={() => run((a) => setPostStatus(post.id, 'mod', draft, tc, a))}>
                     Módosítást kérek
                   </button>
                 </div>
-                {draft.trim() && (
+                {hasInput && (
                   <button className="btn btn-ghost btn-sm" disabled={pending}
-                    onClick={() => run(() => addComment(post.id, draft, tc))}>
+                    onClick={() => run((a) => addComment(post.id, draft, tc, a))}>
                     Csak kommentet küldök
                   </button>
                 )}
@@ -202,17 +264,17 @@ export default function PostDetail({ post, onClose, nav }: { post: PostWithMedia
             ) : post.status === 'keszul' ? (
               <div className="row" style={{ flexWrap: 'nowrap' }}>
                 <button className="btn btn-light" style={{ flex: '1 1 0' }} disabled={pending}
-                  onClick={() => run(() => setPostStatus(post.id, 'ok', draft, tc))}>
+                  onClick={() => run((a) => setPostStatus(post.id, 'ok', draft, tc, a))}>
                   Elfogadom
                 </button>
-                <button className="btn btn-ghost" style={{ flex: '1 1 0' }} disabled={pending || !draft.trim()}
-                  onClick={() => run(() => addComment(post.id, draft, tc))}>
+                <button className="btn btn-ghost" style={{ flex: '1 1 0' }} disabled={pending || !hasInput}
+                  onClick={() => run((a) => addComment(post.id, draft, tc, a))}>
                   Komment küldése
                 </button>
               </div>
             ) : (
-              <button className="btn btn-ghost" style={{ width: '100%' }} disabled={pending || !draft.trim()}
-                onClick={() => run(() => addComment(post.id, draft, tc))}>
+              <button className="btn btn-ghost" style={{ width: '100%' }} disabled={pending || !hasInput}
+                onClick={() => run((a) => addComment(post.id, draft, tc, a))}>
                 Komment küldése
               </button>
             )}

@@ -68,6 +68,8 @@ export type Comment = {
   body: string;
   created_at: string;
   timecode?: number | null;
+  attachments?: string[];
+  attachment_urls?: string[];
 };
 
 export type PostWithMedia = Post & { visual_url: string | null; video_src: string | null; comments: Comment[] };

@@ -26,18 +26,24 @@ export async function loadMonthPosts(supabase: Supa, clientId: string, month: st
   const { data: comments } = ids.length
     ? await supabase
         .from('comments')
-        .select('id, post_id, author_name, author_role, body, created_at, timecode')
+        .select('id, post_id, author_name, author_role, body, created_at, timecode, attachments')
         .in('post_id', ids)
         .order('created_at', { ascending: true })
         .returns<Comment[]>()
     : { data: [] as Comment[] };
 
-  const urls = await signPaths(supabase, list.flatMap((p) => [p.visual_path, p.video_path]).filter((x): x is string => !!x));
+  const urls = await signPaths(supabase, [
+    ...list.flatMap((p) => [p.visual_path, p.video_path]),
+    ...(comments ?? []).flatMap((c) => c.attachments ?? []),
+  ].filter((x): x is string => !!x));
 
   return list.map((p) => ({
     ...p,
     visual_url: p.visual_path ? urls.get(p.visual_path) ?? null : null,
     video_src: p.video_path ? urls.get(p.video_path) ?? null : null,
-    comments: (comments ?? []).filter((c) => c.post_id === p.id),
+    comments: (comments ?? []).filter((c) => c.post_id === p.id).map((c) => ({
+      ...c,
+      attachment_urls: (c.attachments ?? []).map((a) => urls.get(a)).filter((u): u is string => !!u),
+    })),
   }));
 }
