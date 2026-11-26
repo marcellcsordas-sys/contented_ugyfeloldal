@@ -135,7 +135,7 @@ export default function PostForm({ clientId, post, month }: { clientId: string; 
       </div>
 
       <div className="field">
-        <label htmlFor="internal_note">Contented jegyzet (az ügyfél is látja)</label>
+        <label htmlFor="internal_note">Belső jegyzet (csak mi látjuk, az ügyfél nem)</label>
         <textarea id="internal_note" name="internal_note" className="textarea" defaultValue={post?.internal_note ?? ''} />
       </div>
 

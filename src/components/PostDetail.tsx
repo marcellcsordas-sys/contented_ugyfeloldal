@@ -205,13 +205,6 @@ export default function PostDetail({ post, onClose, nav }: { post: PostWithMedia
             )}
           </div>
 
-          {post.internal_note && (
-            <div className="panel stack" style={{ gap: 4 }}>
-              <span className="badge" style={{ border: 0, padding: 0 }}>Contented jegyzet</span>
-              <span className="small muted">{post.internal_note}</span>
-            </div>
-          )}
-
           <div className="stack" style={{ gap: 10 }}>
             <span className="eyebrow">Kommentek</span>
             {post.comments.length === 0 && <span className="small muted">Még nincs komment. Írd meg, ha változtatnál.</span>}

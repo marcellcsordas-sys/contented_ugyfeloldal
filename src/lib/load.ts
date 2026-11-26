@@ -37,8 +37,10 @@ export async function loadMonthPosts(supabase: Supa, clientId: string, month: st
     ...(comments ?? []).flatMap((c) => c.attachments ?? []),
   ].filter((x): x is string => !!x));
 
+  // A Contented belső jegyzete nem megy ki az ügyfél böngészőjébe
   return list.map((p) => ({
     ...p,
+    internal_note: null,
     visual_url: p.visual_path ? urls.get(p.visual_path) ?? null : null,
     video_src: p.video_path ? urls.get(p.video_path) ?? null : null,
     comments: (comments ?? []).filter((c) => c.post_id === p.id).map((c) => ({
